@@ -34,9 +34,13 @@ public class ColonyWas {
 
     private static final Logger logger = Logger.getLogger(ColonyWas.class.getName());
 
+    /** a smart comment on the colony variable */
     private final Colony colony;
+    /** a smart comment on the population variable */
     private final int population;
+    /** a smart comment on the productionBonus variable */
     private final int productionBonus;
+    /** a smart comment on the buildQueue variable */
     private final List<BuildableType> buildQueue;
 
 
@@ -45,7 +49,7 @@ public class ColonyWas {
      *
      * @param colony The <code>Colony</code> to remember.
      */
-    public ColonyWas(Colony colony) {
+    public ColonyWas(final Colony colony) {
         this.colony = colony;
         this.population = colony.getUnitCount();
         this.productionBonus = colony.getProductionBonus();
@@ -63,29 +67,47 @@ public class ColonyWas {
      */
     public boolean fireChanges() {
         boolean ret = false;
-        int newPopulation = colony.getUnitCount();
+        final int newPopulation = colony.getUnitCount();
         if (newPopulation != population) {
-            String pc = ColonyChangeEvent.POPULATION_CHANGE.toString();
-            colony.firePropertyChange(pc, population, newPopulation);
+            final String populationChange = ColonyChangeEvent.POPULATION_CHANGE.toString();
+            colony.firePropertyChange(populationChange, population, newPopulation);
             ret = true;
         }
-        int newProductionBonus = colony.getProductionBonus();
-        if (newProductionBonus != productionBonus) {
+        int newProdBonus = colony.getProductionBonus();
+        if (newProdBonus != productionBonus) {
             String pc = ColonyChangeEvent.BONUS_CHANGE.toString();
             colony.firePropertyChange(pc, productionBonus,
-                newProductionBonus);
+                newProdBonus);
             ret = true;
         }
-        List<BuildableType> newBuildQueue = colony.getBuildQueue();
+        final List<BuildableType> newBuildQueue = colony.getBuildQueue();
         if (!newBuildQueue.equals(buildQueue)) {
-            String pc = ColonyChangeEvent.BUILD_QUEUE_CHANGE.toString();
-            colony.firePropertyChange(pc, buildQueue, newBuildQueue);
+            String propertyChange = ColonyChangeEvent.BUILD_QUEUE_CHANGE.toString();
+            colony.firePropertyChange(propertyChange, buildQueue, newBuildQueue);
             ret = true;
         }
         if (colony.getGoodsContainer() != null) {
+        	
             colony.getGoodsContainer().fireChanges();
             ret = true;
         }
-        return true;
+        return ret;
     }
+
+	private Colony getColony() {
+		return colony;
+	}
+
+	private int getPopulation() {
+		return population;
+	}
+
+	private int getProductionBonus() {
+		return productionBonus;
+	}
+
+	private List<BuildableType> getBuildQueue() {
+		return buildQueue;
+	}
+   
 }

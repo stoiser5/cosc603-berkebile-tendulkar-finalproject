@@ -86,7 +86,7 @@ public final class MapEditorTransformPanel extends FreeColPanel {
     /**
      * A native nation to use for native settlement type and skill.
      */
-    private static Nation nativeNation = null;
+    private Nation nativeNation = null;
 
 
     /**
@@ -193,7 +193,7 @@ public final class MapEditorTransformPanel extends FreeColPanel {
      *
      * @param newNativeNation The new native <code>Nation</code>.
      */
-    public static void setNativeNation(Nation newNativeNation) {
+    public void setNativeNation(Nation newNativeNation) {
         nativeNation = newNativeNation;
     }
 

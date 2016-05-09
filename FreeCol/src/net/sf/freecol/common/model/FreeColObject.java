@@ -1228,7 +1228,7 @@ public abstract class FreeColObject
      *
      * @return <code>null</code>.
      */
-    public static String getTagName() {
-        return null;
+    public static String getTagName(){
+    	return null;
     }
 }
