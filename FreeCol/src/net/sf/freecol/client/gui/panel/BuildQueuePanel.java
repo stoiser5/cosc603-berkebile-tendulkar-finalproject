@@ -19,9 +19,6 @@
 
 package net.sf.freecol.client.gui.panel;
 
-import static net.sf.freecol.common.util.CollectionUtils.any;
-import static net.sf.freecol.common.util.StringUtils.join;
-
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -35,6 +32,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -65,6 +63,7 @@ import javax.swing.TransferHandler;
 import javax.swing.plaf.PanelUI;
 
 import net.miginfocom.swing.MigLayout;
+
 import net.sf.freecol.client.FreeColClient;
 import net.sf.freecol.client.gui.FontLibrary;
 import net.sf.freecol.client.gui.ImageLibrary;
@@ -78,8 +77,8 @@ import net.sf.freecol.common.model.Building;
 import net.sf.freecol.common.model.BuildingType;
 import net.sf.freecol.common.model.Colony;
 import net.sf.freecol.common.model.FeatureContainer;
-import net.sf.freecol.common.model.FreeColObject;
 import net.sf.freecol.common.model.FreeColSpecObjectType;
+import net.sf.freecol.common.model.FreeColObject;
 import net.sf.freecol.common.model.GameOptions;
 import net.sf.freecol.common.model.Limit;
 import net.sf.freecol.common.model.Named;
@@ -87,26 +86,22 @@ import net.sf.freecol.common.model.Specification;
 import net.sf.freecol.common.model.StringTemplate;
 import net.sf.freecol.common.model.Turn;
 import net.sf.freecol.common.model.UnitType;
+import static net.sf.freecol.common.util.CollectionUtils.*;
+import static net.sf.freecol.common.util.StringUtils.*;
 
 
-// TODO: Auto-generated Javadoc
 /**
  * The panel used to display a colony build queue.
  */
 public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 
-	/** The Constant logger. */
 	private static final Logger logger = Logger.getLogger(BuildQueuePanel
 			.class.getName());
 
-	/** The Constant BUILD_LIST_FLAVOR. */
 	private static final DataFlavor BUILD_LIST_FLAVOR
 	= new DataFlavor(List.class, "BuildListFlavor");
 
-	/** The Constant BUY. */
 	private static final String BUY = "buy";
-	
-	/** The Constant UNABLE_TO_BUILD. */
 	private static final int UNABLE_TO_BUILD = -1;
 
 	/** Default setting for the compact box. */
@@ -146,10 +141,7 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 	/** The check box to enable showing all buildables. */
 	private final JCheckBox showAllBox;
 
-	/** The lock reasons. */
 	private final Map<BuildableType, String> lockReasons = new HashMap<>();
-	
-	/** The unbuildable types. */
 	private final Set<BuildableType> unbuildableTypes
 	= new HashSet<>();
 
@@ -165,10 +157,8 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 		 */
 		public class BuildablesTransferable implements Transferable {
 
-			/** The buildables. */
 			private final List<? extends BuildableType> buildables;
 
-			/** The supported flavors. */
 			private final DataFlavor[] supportedFlavors = {
 					BUILD_LIST_FLAVOR
 			};
@@ -223,10 +213,7 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 			}
 		}
 
-		/** The source. */
 		private JList<? extends BuildableType> source = null;
-		
-		/** The number of items. */
 		//private int[] indices = null;
 		private int numberOfItems = 0; // number of items to be added
 
@@ -247,7 +234,14 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 				return false;
 			}
 
-			Object transferData = transferData(data);
+			// Grab the transfer object and insist it is a list of something.
+			Object transferData;
+			try {
+				transferData = data.getTransferData(BUILD_LIST_FLAVOR);
+			} catch (UnsupportedFlavorException | IOException e) {
+				logger.log(Level.WARNING, "BuildQueue import", e);
+				return false;
+			}
 			if (!(transferData instanceof List<?>)) return false;
 
 			// Collect the transferred buildables.
@@ -301,7 +295,14 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 			int maxIndex = targetModel.size();
 			int prevPos = -1;
 			if (isOrderingQueue) {
-				prevPos = prevPos(queue, targetModel, prevPos);
+				// Find previous position
+				for (int i = 0; i < targetModel.getSize(); i++) {
+					if (targetModel.getElementAt(i) == queue.get(0)) {
+						prevPos = i;
+						break;
+					}
+				}
+
 				// Suppress dropping the selection onto itself.
 				if (preferredIndex != -1 && prevPos == preferredIndex) {
 					//indices = null;
@@ -323,10 +324,35 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 				}
 			}
 
-			preferredIndex = setPreferredIndex(preferredIndex, maxIndex);
+			// Set index to add to the last position, if not set or
+			// out-of-bounds
+			if (preferredIndex < 0 || preferredIndex > maxIndex) {
+				preferredIndex = maxIndex;
+			}
+
 			for (int index = 0; index < queue.size(); index++) {
-				int minimumIndex = setMinimumIndex(queue, targetModel, preferredIndex, index);
 				BuildableType toBuild = queue.get(index);
+				int minimumIndex = getMinimumIndex(toBuild);
+
+				// minimumIndex == targetModel.size() means it has to
+				// go at the end.
+				if (minimumIndex < targetModel.size()) {
+					int maximumIndex = getMaximumIndex(toBuild);
+
+					// minimumIndex == maximumIndex means there is
+					// only one place it can go.
+					if (minimumIndex != maximumIndex) {
+						if (minimumIndex < preferredIndex + index) {
+							minimumIndex = preferredIndex + index;
+						}
+						if (minimumIndex > targetModel.size()) {
+							minimumIndex = targetModel.size();
+						}
+						if (minimumIndex > maximumIndex) {
+							minimumIndex = maximumIndex;
+						}
+					}
+				}
 				targetModel.add(minimumIndex, toBuild);
 			}
 
@@ -336,85 +362,6 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 				.setSelectedIndex(preferredIndex);
 			}
 			return true;
-		}
-		
-		/**
-		 * Sets the minimum index.
-		 *
-		 * @param queue the queue
-		 * @param targetModel the target model
-		 * @param preferredIndex the preferred index
-		 * @param index the index
-		 * @return the int
-		 */
-		private int setMinimumIndex(List<BuildableType> queue, DefaultListModel<BuildableType> targetModel,
-				int preferredIndex, int index) {
-			BuildableType toBuild = queue.get(index);
-			int minimumIndex = getMinimumIndex(toBuild);
-			if (minimumIndex < targetModel.size()) {
-				int maximumIndex = getMaximumIndex(toBuild);
-				if (minimumIndex != maximumIndex) {
-					if (minimumIndex < preferredIndex + index) {
-						minimumIndex = preferredIndex + index;
-					}
-					if (minimumIndex > targetModel.size()) {
-						minimumIndex = targetModel.size();
-					}
-					if (minimumIndex > maximumIndex) {
-						minimumIndex = maximumIndex;
-					}
-				}
-			}
-			return minimumIndex;
-		}
-		
-		/**
-		 * Extracted setPreferredIndex from importData.
-		 *
-		 * @param preferredIndex the preferred index
-		 * @param maxIndex the max index
-		 * @return the int
-		 */
-		private int setPreferredIndex(int preferredIndex, int maxIndex) {
-			if (preferredIndex < 0 || preferredIndex > maxIndex) {
-				preferredIndex = maxIndex;
-			}
-			return preferredIndex;
-		}
-		
-		/**
-		 * Extracted transferData from importData.
-		 *
-		 * @param data the data
-		 * @return the object
-		 */
-		private Object transferData(Transferable data) {
-			Object transferData;
-			try {
-				transferData = data.getTransferData(BUILD_LIST_FLAVOR);
-			} catch (UnsupportedFlavorException | IOException e) {
-				logger.log(Level.WARNING, "BuildQueue import", e);
-				return false;
-			}
-			return transferData;
-		}
-
-/**
- * Extracted method prevPos from importData.
- *
- * @param queue the queue
- * @param targetModel the target model
- * @param prevPos the prev pos
- * @return the int
- */
-		private int prevPos(List<BuildableType> queue, DefaultListModel<BuildableType> targetModel, int prevPos) {
-			for (int i = 0; i < targetModel.getSize(); i++) {
-				if (targetModel.getElementAt(i) == queue.get(0)) {
-					prevPos = i;
-					break;
-				}
-			}
-			return prevPos;
 		}
 
 		/**
@@ -458,23 +405,13 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 		}
 	}
 
-	/**
-	 * The Class BuildQueueMouseAdapter.
-	 */
 	private class BuildQueueMouseAdapter extends MouseAdapter {
 
-		/** The add. */
 		private boolean add = true;
 
-		/** The enabled. */
 		private boolean enabled = false;
 
 
-		/**
-		 * Instantiates a new builds the queue mouse adapter.
-		 *
-		 * @param add the add
-		 */
 		public BuildQueueMouseAdapter(boolean add) {
 			this.add = add;
 		}
@@ -524,29 +461,17 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 	private class DefaultBuildQueueCellRenderer
 	implements ListCellRenderer<BuildableType> {
 
-		/** The item panel. */
 		private final JPanel itemPanel = new JPanel();
-		
-		/** The selected panel. */
 		private final JPanel selectedPanel = new JPanel();
-		
-		/** The image label. */
 		private final JLabel imageLabel = new JLabel(new ImageIcon());
-		
-		/** The name label. */
 		private final JLabel nameLabel = new JLabel();
 
-		/** The lock label. */
 		private final JLabel lockLabel = new JLabel(new ImageIcon(
 				ImageLibrary.getMiscImage(ImageLibrary.ICON_LOCK, 0.5f)));
 
-		/** The building dimension. */
 		private final Dimension buildingDimension = new Dimension(-1, 48);
 
 
-		/**
-		 * Instantiates a new default build queue cell renderer.
-		 */
 		public DefaultBuildQueueCellRenderer() {
 			itemPanel.setOpaque(false);
 			itemPanel.setLayout(new MigLayout());
@@ -773,20 +698,12 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 								: null;
 	}
 
-	/**
-	 * Removes the buildable.
-	 *
-	 * @param type the type
-	 */
 	private void removeBuildable(Object type) {
 		DefaultListModel<BuildableType> model
 		= (DefaultListModel<BuildableType>)this.buildQueueList.getModel();
 		model.removeElement(type);
 	}
 
-	/**
-	 * Update unit list.
-	 */
 	private void updateUnitList() {
 		final Specification spec = getSpecification();
 		final Turn turn = getGame().getTurn();
@@ -818,13 +735,14 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 			if (!(this.colony.hasAbility(Ability.BUILD, unitType, turn)
 					|| this.featureContainer.hasAbility(Ability.BUILD,
 							unitType, null))) {
-				boolean builderFound = isBuilderFound(spec, unitType);
+				boolean builderFound = false;
 				for (Ability ability : spec.getAbilities(Ability.BUILD)) {
 					FreeColObject source = ability.getSource();
 					if (ability.appliesTo(unitType)
 							&& ability.getValue()
 							&& source != null
 							&& !unbuildableTypes.contains(source)) {
+						builderFound = true;
 						if (source instanceof Named) {
 							lockReason.add(Messages.getName((Named)source));
 						}
@@ -868,29 +786,6 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 		}
 	}
 
-/**
- * Extracted isBuilderFound from updateUnitList.
- *
- * @param spec the spec
- * @param unitType the unit type
- * @return true, if is builder found
- */
-	private boolean isBuilderFound(Specification spec, UnitType unitType) {
-		boolean builderFound = false;
-		for (Ability ability : spec.getAbilities(Ability.BUILD)) {
-			FreeColObject source = ability.getSource();
-			if (ability.appliesTo(unitType) && ability.getValue() && source != null
-					&& !unbuildableTypes.contains(source)) {
-				builderFound = true;
-				break;
-			}
-		}
-		return builderFound;
-	}
-
-	/**
-	 * Update building list.
-	 */
 	private void updateBuildingList() {
 		final Specification spec = getSpecification();
 		final DefaultListModel<BuildingType> buildings
@@ -980,9 +875,6 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 		}
 	}
 
-	/**
-	 * Update all lists.
-	 */
 	private void updateAllLists() {
 		final DefaultListModel<BuildableType> current
 		= (DefaultListModel<BuildableType>)this.buildQueueList.getModel();
@@ -1012,27 +904,14 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 				&& this.colony.canPayToFinishBuilding(bt));
 		this.setBuyLabel(bt);
 
-		constructionPanel(current);
-	}
-
-	/**
-	 * Extracted constructPanel from updateAllList.
-	 *
-	 * @param current the current
-	 */
-	private void constructionPanel(DefaultListModel<BuildableType> current) {
+		// Update the construction panel
 		if (current.getSize() > 0) {
 			this.constructionPanel.update(current.getElementAt(0));
 		} else if (current.getSize() == 0) {
-			this.constructionPanel.update();
+			this.constructionPanel.update(); // generates Building: Nothing
 		}
 	}
 
-	/**
-	 * Sets the buy label.
-	 *
-	 * @param buildable the new buy label
-	 */
 	private void setBuyLabel(BuildableType buildable) {
 		this.buyBuildable.setText(Messages.message((buildable == null)
 				? StringTemplate.template("buildQueuePanel.buyBuilding")
@@ -1042,12 +921,6 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 						.addNamed("%buildable%", buildable)));
 	}
 
-	/**
-	 * Checks for building type.
-	 *
-	 * @param buildingType the building type
-	 * @return true, if successful
-	 */
 	private boolean hasBuildingType(BuildingType buildingType) {
 		if (this.colony.getBuilding(buildingType) == null) {
 			return false;
@@ -1060,12 +933,6 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 		}
 	}
 
-	/**
-	 * Gets the buildable types.
-	 *
-	 * @param list the list
-	 * @return the buildable types
-	 */
 	private List<BuildableType> getBuildableTypes(JList<? extends BuildableType> list) {
 		List<BuildableType> result = new ArrayList<>();
 		if (list == null) return result;
@@ -1076,12 +943,6 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 		return result;
 	}
 
-	/**
-	 * Gets the minimum index.
-	 *
-	 * @param buildableType the buildable type
-	 * @return the minimum index
-	 */
 	private int getMinimumIndex(BuildableType buildableType) {
 		ListModel<BuildableType> buildQueue = this.buildQueueList.getModel();
 		if (buildableType instanceof UnitType) {
@@ -1108,17 +969,15 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 		return UNABLE_TO_BUILD;
 	}
 
-	/**
-	 * Gets the maximum index.
-	 *
-	 * @param buildableType the buildable type
-	 * @return the maximum index
-	 */
 	private int getMaximumIndex(BuildableType buildableType) {
 		ListModel<BuildableType> buildQueue = this.buildQueueList.getModel();
 		final int buildQueueLastPos = buildQueue.getSize();
 
-		boolean canBuild = canBuild(buildableType);
+		boolean canBuild = false;
+		if (this.colony.canBuild(buildableType)) {
+			canBuild = true;
+		}
+
 		if (buildableType instanceof UnitType) {
 			// does not depend on anything, nothing depends on it
 			// can be built at any time
@@ -1179,23 +1038,6 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 		return UNABLE_TO_BUILD;
 	}
 
-/**
- * Can build.
- *
- * @param buildableType the buildable type
- * @return true, if successful
- */
-/*
- *  Extracted method canBuild from getMaximumIndex
- */
-	private boolean canBuild(BuildableType buildableType) {
-		boolean canBuild = false;
-		if (this.colony.canBuild(buildableType)) {
-			canBuild = true;
-		}
-		return canBuild;
-	}
-
 	/**
 	 * Set the correct cell renderer in the buildables lists.
 	 */
@@ -1219,13 +1061,14 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 	public void actionPerformed(ActionEvent ae) {
 		final String FAIL = "FAIL";
 		if (this.colony.getOwner() == getMyPlayer()) {
-			String command = setCommand(ae, FAIL);
+			String command = ae.getActionCommand();
 			List<BuildableType> buildables = getBuildableTypes(this
 					.buildQueueList);
 			while (!buildables.isEmpty()
 					&& lockReasons.get(buildables.get(0)) != null) {
 				getGUI().showInformationMessage(buildables.get(0),
 						this.colony.getUnbuildableMessage(buildables.get(0)));
+				command = FAIL;
 				removeBuildable(buildables.remove(0));
 			}
 			igc().setBuildQueue(this.colony, buildables);
@@ -1245,22 +1088,6 @@ public class BuildQueuePanel extends FreeColPanel implements ItemListener {
 			}
 		}
 		getGUI().removeFromCanvas(this);
-	}
-
-/**
- * Extracted setCommand from actionPerformed.
- *
- * @param ae the ae
- * @param FAIL the fail
- * @return the string
- */
-	private String setCommand(ActionEvent ae, String FAIL) {
-		String command = ae.getActionCommand();
-		List<BuildableType> buildables = getBuildableTypes(this.buildQueueList);
-		while (!buildables.isEmpty() && lockReasons.get(buildables.get(0)) != null) {
-			command = FAIL;
-		}
-		return command;
 	}
 
 
