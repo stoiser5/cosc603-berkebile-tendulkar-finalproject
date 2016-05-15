@@ -331,7 +331,8 @@ public class MarketData extends FreeColGameObject {
             newPrice = newSalePrice + diff;
         }
 
-        // Another hack to prevent price changing too fast in one hit.
+        amountPrice = getAmountPrice(diff, amountPrice, newPrice);
+		// Another hack to prevent price changing too fast in one hit.
         // Push the amount in market back as well to keep this stable.
         //
         // Prices that change by more than the buy/sell difference
@@ -340,7 +341,6 @@ public class MarketData extends FreeColGameObject {
         // but game balance demands it here.
         if (costToBuy > 0) {
             if (newPrice > costToBuy + diff) {
-                amountPrice -= newPrice - (costToBuy + diff);
                 amountInMarket = Math.round(goodsType.getInitialAmount()
                     * (initialPrice / amountPrice));
                 logger.info("Clamped price rise for " + getId()
@@ -348,7 +348,6 @@ public class MarketData extends FreeColGameObject {
                     + " to " + (costToBuy + diff));
                 newPrice = costToBuy + diff;
             } else if (newPrice < costToBuy - diff) {
-                amountPrice += (costToBuy - diff) - newPrice;
                 amountInMarket = Math.round(goodsType.getInitialAmount()
                     * (initialPrice / amountPrice));
                 logger.info("Clamped price fall for " + getId()
@@ -378,6 +377,23 @@ public class MarketData extends FreeColGameObject {
         }            
         return costToBuy != oldCostToBuy || paidForSale != oldPaidForSale;
     }
+    /**
+     * Extracted getAmountPrice from price()
+     * @param diff
+     * @param amountPrice
+     * @param newPrice
+     * @return
+     */
+	private float getAmountPrice(int diff, float amountPrice, int newPrice) {
+		if (costToBuy > 0) {
+			if (newPrice > costToBuy + diff) {
+				amountPrice -= newPrice - (costToBuy + diff);
+			} else if (newPrice < costToBuy - diff) {
+				amountPrice += (costToBuy - diff) - newPrice;
+			}
+		}
+		return amountPrice;
+	}
 
     /**
      * Update the pricing of this datum, ignoring the price change clamp.
