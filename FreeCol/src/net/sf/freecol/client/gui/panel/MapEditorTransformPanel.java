@@ -19,16 +19,17 @@
 
 package net.sf.freecol.client.gui.panel;
 
+import static net.sf.freecol.common.util.CollectionUtils.map;
+import static net.sf.freecol.common.util.CollectionUtils.toList;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
@@ -59,7 +60,6 @@ import net.sf.freecol.common.model.TileImprovement;
 import net.sf.freecol.common.model.TileImprovementType;
 import net.sf.freecol.common.model.TileType;
 import net.sf.freecol.common.model.UnitType;
-import static net.sf.freecol.common.util.CollectionUtils.*;
 import net.sf.freecol.server.model.ServerIndianSettlement;
 
 
@@ -77,7 +77,7 @@ import net.sf.freecol.server.model.ServerIndianSettlement;
 public final class MapEditorTransformPanel extends FreeColPanel {
 
     @SuppressWarnings("unused")
-    private static final Logger logger = Logger.getLogger(MapEditorTransformPanel.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MapEditorTransformPanel.class.getName());
 
     private final JPanel listPanel;
     private JToggleButton settlementButton;
@@ -86,7 +86,7 @@ public final class MapEditorTransformPanel extends FreeColPanel {
     /**
      * A native nation to use for native settlement type and skill.
      */
-    private Nation nativeNation = null;
+    private static Nation nativeNation = null;
 
 
     /**
@@ -120,13 +120,16 @@ public final class MapEditorTransformPanel extends FreeColPanel {
     private void buildList() {
         final Specification spec = getSpecification();
         List<TileType> tileList = spec.getTileTypeList();
-        Dimension terrainSize = ImageLibrary.scaleDimension(ImageLibrary.TILE_OVERLAY_SIZE, 0.5f);
+        Dimension terrainSize = ImageLibrary.scaleDimension(
+        						ImageLibrary.TILE_OVERLAY_SIZE, 0.5f);
         for (TileType type : tileList) {
-            listPanel.add(buildButton(SwingGUI.createTileImageWithOverlayAndForest(type, terrainSize),
+            listPanel.add(buildButton(SwingGUI.createTileImageWithOverlayAndForest
+            						  (type, terrainSize),
                                       Messages.getName(type),
                                       new TileTypeTransform(type)));
         }
-        Dimension riverSize = ImageLibrary.scaleDimension(ImageLibrary.TILE_SIZE, 0.5f);
+        Dimension riverSize = ImageLibrary.scaleDimension
+        					  (ImageLibrary.TILE_SIZE, 0.5f);
         listPanel.add(buildButton(ImageLibrary.getRiverImage("0101", riverSize),
                                   Messages.message("mapEditorTransformPanel.minorRiver"),
                                   new RiverTransform(TileImprovement.SMALL_RIVER)));
@@ -193,7 +196,7 @@ public final class MapEditorTransformPanel extends FreeColPanel {
      *
      * @param newNativeNation The new native <code>Nation</code>.
      */
-    public void setNativeNation(Nation newNativeNation) {
+    public static void setNativeNation(Nation newNativeNation) {
         nativeNation = newNativeNation;
     }
 
@@ -263,7 +266,7 @@ public final class MapEditorTransformPanel extends FreeColPanel {
         private final int magnitude;
 
         private RiverTransform(int magnitude) {
-            this.magnitude = magnitude;
+          this.magnitude = magnitude;
         }
 
         @Override
@@ -273,18 +276,33 @@ public final class MapEditorTransformPanel extends FreeColPanel {
 
             if (riverType.isTileTypeAllowed(tile.getType())
                 && !tile.hasRiver()) {
-                String conns = "";
-                for (Direction direction : Direction.longSides) {
-                    Tile t = tile.getNeighbourOrNull(direction);
-                    TileImprovement otherRiver = (t == null) ? null
-                        : t.getRiver();
-                    conns += (t == null
-                        || (t.isLand() && otherRiver == null)) ? "0"
-                        : Integer.toString(magnitude);
-                }
-                tile.addRiver(magnitude, conns);
+                setTile(tile);
             }
         }
+        /**
+         * Extracted setTile from transform(Tile tile)
+         * @param tile
+         */
+		private void setTile(Tile tile) {
+			StringBuffer conns = new StringBuffer();
+			for (Direction direction : Direction.longSides) {
+				Tile t = tile.getNeighbourOrNull(direction);
+				TileImprovement otherRiver;
+				if (t == null){
+					otherRiver = null;
+				}
+				else {
+					otherRiver = t.getRiver();
+				}
+				if (t == null || (t.isLand() && otherRiver == null)){
+					conns.append("0");
+				}
+				else{
+					conns.append(Integer.toString(magnitude));
+				}
+			}
+			tile.addRiver(magnitude, conns.toString());
+		}
     }
 
     /**
@@ -348,19 +366,27 @@ public final class MapEditorTransformPanel extends FreeColPanel {
             if (!t.isLand()
                 || t.hasSettlement()
                 || nativeNation == null) return;
-            UnitType skill = ((IndianNationType)nativeNation.getType())
-                .getSkills().get(0).getObject();
-            Player nativePlayer = getGame().getPlayerByNation(nativeNation);
+            ServerIndianSettlement settlement = setSettlement(t);
+			Player nativePlayer = getGame().getPlayerByNation(nativeNation);
             if (nativePlayer == null) return;
-            String name = nativePlayer.getSettlementName(null);
-            ServerIndianSettlement settlement
-                = new ServerIndianSettlement(t.getGame(),
-                    nativePlayer, name, t, false, skill, null);
             nativePlayer.addSettlement(settlement);
-            settlement.placeSettlement(true);
             settlement.addUnits(null);
-            logger.info("Add settlement " + settlement.getName()
+            LOGGER.info("Add settlement " + settlement.getName()
                 + " to tile " + t);
         }
+        /**
+         * Extracted setSettlement from transform(Tile t)
+         * @param t
+         * @return 
+         */
+		private ServerIndianSettlement setSettlement(Tile t) {
+			UnitType skill = ((IndianNationType) nativeNation.getType()).getSkills().get(0).getObject();
+			Player nativePlayer = getGame().getPlayerByNation(nativeNation);
+			String name = nativePlayer.getSettlementName(null);
+			ServerIndianSettlement settlement = new ServerIndianSettlement(t.getGame(), nativePlayer, name, t, false,
+					skill, null);
+			settlement.placeSettlement(true);
+			return settlement;
+		}
     }
 }
