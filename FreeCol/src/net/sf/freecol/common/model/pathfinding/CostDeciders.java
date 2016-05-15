@@ -250,12 +250,20 @@ public final class CostDeciders {
 
             @Override
             public int getMovesLeft() {
-                return (index < 0) ? 0 : costDeciders[index].getMovesLeft();
+            	if(index < 0){
+                return 0 ;
+            	}
+                else
+                return costDeciders[index].getMovesLeft();
             }
 
             @Override
             public int getNewTurns() {
-                return (index < 0) ? 0 : costDeciders[index].getNewTurns();
+            	if(index < 0){
+                return 0; 
+            	}
+                else 
+                return	costDeciders[index].getNewTurns();
             }
         };
     }
