@@ -19,8 +19,12 @@
 
 package net.sf.freecol.common.model;
 
+import java.awt.Color;
 import java.util.Iterator;
 
+import net.sf.freecol.common.i18n.Messages;
+import net.sf.freecol.common.model.Player.NoClaimReason;
+import net.sf.freecol.common.model.Player.PlayerType;
 import net.sf.freecol.server.model.ServerGame;
 import net.sf.freecol.server.model.ServerPlayer;
 import net.sf.freecol.server.model.ServerUnit;
@@ -33,7 +37,207 @@ public class PlayerTest extends FreeColTestCase {
         = spec().getUnitType("model.unit.freeColonist");
     private static final UnitType galleonType
         = spec().getUnitType("model.unit.galleon");
+    
+    @SuppressWarnings("null")
+	public void testGetLandPrice(){
+    	Specification specification = spec("freecol");
+    	Game game = getStandardGame();
+    	
+        Player dutch = game.getPlayerByNationId("model.nation.dutch");
+        Tile tile = new Tile(game, specification.getId());
+        int price = dutch.getLandPrice(tile);
+        assertEquals(0, price);
+        
+        Specification specification1 = spec("freecol");
+    	Game game1 = getStandardGame();
+        Player dutchREF = game1.getPlayerByNationId("model.nation.dutchREF");
+        Tile tile1 = new Tile(game1, specification1.getId());
+        
+        int price1 = dutchREF.getLandPrice(tile1);
+        assertEquals(0, price1);
+        
+    }
+    
+    public void testcheckDeclareIndependence(){
+    	Game game = getStandardGame();
+        Player dutch = game.getPlayerByNationId("model.nation.dutchREF");
+        StringTemplate template = dutch.checkDeclareIndependence();
+        assertEquals(StringTemplate.template("model.player.colonialIndependence"),
+        		template);
+    	
+    }
+    
+    public void testGetNationColor(){
+    	Game game = getStandardGame();
+        Player dutch = game.getPlayerByNationId("model.nation.dutch");
+        Color color = dutch.getNationColor();
+        assertEquals(game.getSpecification().getNation("model.nation.dutch").getColor(), color);
+        
+    }
+    
+    public void testIsPotentialEnemy(){
+    	
+    	Game game = getStandardGame();
+        Player dutch = game.getPlayerByNationId("model.nation.dutch");
+        Player dutchREF_p1 = game.getPlayerByNationId("model.nation.dutchREF");
+        Player dutchREF_p2 = game.getPlayerByNationId("model.nation.dutchREF");
+        
+        dutch.setStance(dutchREF_p1, Stance.CEASE_FIRE);
+        assertTrue(dutch.isPotentialEnemy(dutchREF_p1));
 
+        dutch.setStance(dutchREF_p1, Stance.PEACE);
+        assertTrue(dutch.isPotentialEnemy(dutchREF_p2));
+
+        dutchREF_p2.setStance(dutch, Stance.CEASE_FIRE);
+        assertFalse(dutchREF_p2.isPotentialEnemy(dutch));
+    }
+    
+    public void testIsPotentialFriend(){
+    	
+    	Game game = getStandardGame();
+        Player dutch = game.getPlayerByNationId("model.nation.dutch");
+        Player dutchREF_p1 = game.getPlayerByNationId("model.nation.dutchREF");
+        Player dutchREF_p2 = game.getPlayerByNationId("model.nation.dutchREF");
+        
+        //dutchREF_p1.setStance(dutch, Stance.WAR);
+        dutch.setStance(dutchREF_p1, Stance.WAR);
+        assertTrue(dutch.isPotentialFriend(dutchREF_p1));
+
+        dutchREF_p1.setStance(dutch, Stance.CEASE_FIRE);
+        assertTrue(dutch.isPotentialFriend(dutchREF_p1));
+
+        dutchREF_p2.setStance(dutch, Stance.WAR);
+        assertFalse(dutchREF_p2.isPotentialFriend(dutch));
+    }
+    
+    
+    public void testGetNationLabel(){
+    	
+    	Game game = getStandardGame();
+        Player dutch = game.getPlayerByNationId("model.nation.dutch");
+        
+        StringTemplate template = new StringTemplate();
+        template = dutch.getNationLabel();
+        assertEquals(StringTemplate.key(Messages.nameKey(dutch.getNationId())), template);
+       
+        
+    }
+    
+    public void testGetCountryLabel(){
+    	Game game = getStandardGame();
+        Player dutch = game.getPlayerByNationId("model.nation.dutch");
+        StringTemplate template = new StringTemplate();
+        template = dutch.getCountryLabel();
+        assertEquals(StringTemplate.template("countryName")
+                .addStringTemplate("%nation%", dutch.getNationLabel()), template);
+    	
+    }
+    
+    public void testGetForcesLabel(){
+    	Game game = getStandardGame();
+        Player dutch = game.getPlayerByNationId("model.nation.dutch");
+        StringTemplate template = dutch.getForcesLabel();
+        assertEquals(StringTemplate.template("model.player.forces")
+            .addStringTemplate("%nation%", dutch.getNationLabel()),
+            template);
+    }
+    
+    public void testGetWaitingLabel(){
+    	Game game = getStandardGame();
+        Player dutch = game.getPlayerByNationId("model.nation.dutch");
+        StringTemplate template = dutch.getWaitingLabel();
+        assertEquals(StringTemplate.template("model.player.waitingFor")
+                .addStringTemplate("%nation%", dutch.getNationLabel()),
+            template);
+    	
+    	
+    }
+    public void testGetMarketName(){
+    	Game game = getStandardGame();
+        Player inca = game.getPlayerByNationId("model.nation.inca");
+        StringTemplate template = inca.getMarketName();
+        assertEquals(StringTemplate.key("model.player.independentMarket"), template);
+   
+        Player dutch = game.getPlayerByNationId("model.nation.dutch");
+        StringTemplate template1 = dutch.getMarketName();
+        assertEquals(StringTemplate.key(dutch.getEuropeNameKey()), template1);
+    
+    }
+    public void testGetRank(){
+    	
+    	Game game = getStandardGame();
+        Player dutch = game.getPlayerByNationId("model.nation.dutch");
+        int rank = dutch.getRank();
+    	assertEquals(1,rank);
+    	
+    	Player french = game.getPlayerByNationId("model.nation.french");
+    	french.setAI(true);
+    	int rank1 = french.getRank();
+    	assertEquals(3,rank1);
+    	
+    	Player inca = game.getPlayerByNationId("model.nation.inca");
+    	int rank2 = inca.getRank();
+    	assertEquals(2,rank2);
+    	
+    } 
+      public void testModifyGold(){
+    	  
+    	  Game game = getStandardGame();
+          Player dutch = game.getPlayerByNationId("model.nation.dutch");
+          int gold = dutch.modifyGold(0);
+          assertEquals(0,gold);
+          
+          int newGold = 5;
+          dutch.setGold(newGold);
+          int gold1 = dutch.modifyGold(newGold);
+          assertEquals(10,gold1);
+          
+    	  
+      }
+      
+      public void testgetTotalImmigrationProduction(){
+    	  
+    	  Game game = getStandardGame();
+          Player dutch = game.getPlayerByNationId("model.nation.dutch");
+          int prod = dutch.getTotalImmigrationProduction();
+          assertEquals(2, prod);
+          
+          Player tupi = game.getPlayerByNationId("model.nation.tupi");
+          int prod1 = tupi.getTotalImmigrationProduction();
+          assertEquals(0, prod1);
+      }
+      public void testCanOwnTile(){
+    	  Specification specification = spec("freecol");
+    	  Game game = getStandardGame();
+          Player dutch = game.getPlayerByNationId("model.nation.dutch");
+         
+          Tile tile = new Tile(game, specification.getId());
+         
+          boolean canOwn = dutch.canOwnTile(tile);
+          assertTrue(canOwn);
+    	  
+      }
+      
+    
+       public void testSetNation() {
+        Specification specification = spec("freecol");
+        Game game = getStandardGame();
+        NationOptions nationOptions = new NationOptions(specification);
+        for (Nation nation : specification.getEuropeanNations()) {
+            nationOptions.setNationState(nation, NationOptions.NationState.AVAILABLE);
+        }
+        game.setNationOptions(nationOptions);
+
+        specification.applyDifficultyLevel("model.difficulty.medium");
+
+        Player player = game.getPlayerByNationId("model.nation.english");
+        
+        Nation newNation = specification.getNation("model.nation.dutch");
+        player.setNation(newNation);
+		
+		assertEquals(player.getNationId(), "model.nation.dutch");
+                
+    }
 
     public void testUnits() {
         Game game = getStandardGame();
