@@ -2210,7 +2210,9 @@ public final class InGameController extends FreeColClientHolder {
         for (Goods g : unit.getCompactGoods()) {
             AbstractGoods ag = AbstractGoods.findByType(g.getType(), toLoad);
             if (ag == null) { // Excess goods on board, failed unload?
-                unexpected.addStringTemplate("%goods%", ag.getLabel());
+            	// null pointer dereference of variable ag.
+            	//issue no 11
+                unexpected.addStringTemplate("%goods%", null);
             } else {
                 int goodsAmount = g.getAmount();
                 if (ag.getAmount() <= goodsAmount) { // At capacity
@@ -2738,10 +2740,16 @@ public final class InGameController extends FreeColClientHolder {
      * @return True if a colony was built.
      */
     public boolean buildColony(Unit unit) {
-        if (!requireOurTurn() || unit == null) return false;
+        if (!requireOurTurn() || unit == null) {
+        	return false;
+        }
 
         // Check unit, which must be on the map and able to build.
-        if (unit == null) return false;
+        //Redundant checking of unit == null
+        //Github issue 10
+//        if (unit == null) {
+//        	return false;
+//        }
         final Tile tile = unit.getTile();
         if (tile == null) return false;
         if (!unit.canBuildColony()) {
@@ -3479,7 +3487,10 @@ public final class InGameController extends FreeColClientHolder {
      */
     public boolean firstContact(Player player, Player other, Tile tile,
                                 boolean result) {
-        if (player == null || player == null || player == other
+    	//Removed conditional test
+    	//GitHub issue 10
+    	
+        if (player == null || player == other
             || tile == null) return false;
 
         boolean ret = askServer().firstContact(player, other, tile, result);
