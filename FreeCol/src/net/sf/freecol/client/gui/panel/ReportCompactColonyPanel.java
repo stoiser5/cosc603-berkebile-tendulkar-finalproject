@@ -19,6 +19,20 @@
 
 package net.sf.freecol.client.gui.panel;
 
+import static net.sf.freecol.common.util.CollectionUtils.accumulateMap;
+import static net.sf.freecol.common.util.CollectionUtils.accumulateToMap;
+import static net.sf.freecol.common.util.CollectionUtils.appendToMapList;
+import static net.sf.freecol.common.util.CollectionUtils.count;
+import static net.sf.freecol.common.util.CollectionUtils.descendingDoubleComparator;
+import static net.sf.freecol.common.util.CollectionUtils.descendingIntegerComparator;
+import static net.sf.freecol.common.util.CollectionUtils.doubleAccumulator;
+import static net.sf.freecol.common.util.CollectionUtils.integerAccumulator;
+import static net.sf.freecol.common.util.CollectionUtils.map;
+import static net.sf.freecol.common.util.CollectionUtils.mapEntriesByValue;
+import static net.sf.freecol.common.util.CollectionUtils.toList;
+import static net.sf.freecol.common.util.CollectionUtils.transform;
+import static net.sf.freecol.common.util.CollectionUtils.transformDistinct;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -26,11 +40,11 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.HashMap;
-import java.util.List;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
@@ -38,13 +52,10 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 
 import net.miginfocom.swing.MigLayout;
-
-import net.sf.freecol.client.ClientOptions;
 import net.sf.freecol.client.FreeColClient;
 import net.sf.freecol.client.gui.ImageLibrary;
 import net.sf.freecol.common.i18n.Messages;
@@ -54,20 +65,15 @@ import net.sf.freecol.common.model.BuildableType;
 import net.sf.freecol.common.model.Building;
 import net.sf.freecol.common.model.Colony;
 import net.sf.freecol.common.model.Colony.TileImprovementSuggestion;
-import net.sf.freecol.common.model.ColonyTile;
 import net.sf.freecol.common.model.ExportData;
 import net.sf.freecol.common.model.FreeColObject;
 import net.sf.freecol.common.model.Game;
-import net.sf.freecol.common.model.Goods;
 import net.sf.freecol.common.model.GoodsContainer;
 import net.sf.freecol.common.model.GoodsType;
-import net.sf.freecol.common.model.Location;
 import net.sf.freecol.common.model.Market;
-import net.sf.freecol.common.model.Occupation;
 import net.sf.freecol.common.model.Player;
 import net.sf.freecol.common.model.ProductionInfo;
 import net.sf.freecol.common.model.Region;
-import net.sf.freecol.common.model.Settlement;
 import net.sf.freecol.common.model.Specification;
 import net.sf.freecol.common.model.StringTemplate;
 import net.sf.freecol.common.model.Tile;
@@ -77,8 +83,6 @@ import net.sf.freecol.common.model.UnitType;
 import net.sf.freecol.common.model.WorkLocation;
 import net.sf.freecol.common.model.WorkLocation.Suggestion;
 import net.sf.freecol.common.resources.ResourceManager;
-import static net.sf.freecol.common.util.CollectionUtils.*;
-import static net.sf.freecol.common.util.StringUtils.*;
 
 
 // TODO: Auto-generated Javadoc
@@ -262,7 +266,9 @@ public final class ReportCompactColonyPanel extends ReportPanel
             // checking code, but that in turn should be opened up
             // so the AI can use it...
             for (WorkLocation wl : colony.getAvailableWorkLocations()) {
-                if (!wl.canBeWorked()) continue;
+                if (!wl.canBeWorked()) {
+					continue;
+				}
                 if (wl.canTeach()) {
                     for (Unit u : wl.getUnitList()) {
                         teachers.put(u, u.getNeededTurnsOfTraining()
@@ -310,7 +316,10 @@ public final class ReportCompactColonyPanel extends ReportPanel
             } else {
                 AbstractGoods needed = new AbstractGoods();
                 this.completeTurns = colony.getTurnsToComplete(build, needed);
-                this.needed = (this.completeTurns < 0) ? needed : null;
+                if (this.completeTurns < 0){
+                	this.needed =  needed;
+                }
+                else this.needed = null;
             }
         }
 
@@ -332,8 +341,12 @@ public final class ReportCompactColonyPanel extends ReportPanel
             AbstractGoods deficit;
             int extra = 0;
             if (p < 0) {
-                status = (amount < low) ? ProductionStatus.FAIL
-                    : ProductionStatus.BAD;
+            	if(amount < low){
+                status = ProductionStatus.FAIL;
+            	}
+            	else{
+            	status = ProductionStatus.BAD;
+            	}
                 extra = -amount / p + 1;
             } else if (p == 0 && !colony.isProducing(goodsType)) {
                 status = ProductionStatus.NONE;
@@ -343,7 +356,9 @@ public final class ReportCompactColonyPanel extends ReportPanel
                 deficit = null;
                 for (WorkLocation wl : colony.getWorkLocationsForProducing(goodsType)) {
                     ProductionInfo pi = colony.getProductionInfo(wl);
-                    if (pi == null) continue;
+                    if (pi == null) {
+						continue;
+					}
                     deficit = AbstractGoods.findByType(goodsType,
                         pi.getConsumptionDeficit());
                     if (deficit != null) {
@@ -369,7 +384,9 @@ public final class ReportCompactColonyPanel extends ReportPanel
                 deficit = null;
                 for (WorkLocation wl : colony.getWorkLocationsForProducing(goodsType)) {
                     ProductionInfo pi = colony.getProductionInfo(wl);
-                    if (pi == null) continue;
+                    if (pi == null) {
+						continue;
+					}
                     deficit = AbstractGoods.findByType(goodsType,
                         pi.getProductionDeficit());
                     if (deficit != null) {
@@ -392,7 +409,9 @@ public final class ReportCompactColonyPanel extends ReportPanel
          */
         private void addSuggestion(Map<UnitType, Suggestion> suggestions,
             UnitType expert, Suggestion suggestion) {
-            if (suggestion == null || expert == null) return;
+            if (suggestion == null || expert == null) {
+				return;
+			}
             Suggestion now = suggestions.get(expert);
             if (now == null || now.amount < suggestion.amount) {
                 suggestions.put(expert, suggestion);
@@ -498,7 +517,9 @@ public final class ReportCompactColonyPanel extends ReportPanel
      * Load resources.
      */
     private synchronized void loadResources() {
-        if (cAlarm != null) return;
+        if (cAlarm != null) {
+			return;
+		}
 
         cAlarm = (ResourceManager.hasColorResource(cAlarmKey))
             ? ResourceManager.getColor(cAlarmKey)
@@ -525,9 +546,10 @@ public final class ReportCompactColonyPanel extends ReportPanel
      * @return the string template
      */
     private static StringTemplate stpl(String messageId) {
-        return (Messages.containsKey(messageId))
-            ? StringTemplate.template(messageId)
-            : null;
+    	if(Messages.containsKey(messageId)){
+        return StringTemplate.template(messageId);
+    	}
+    	else return null;
     }
 
     /**
@@ -565,9 +587,13 @@ public final class ReportCompactColonyPanel extends ReportPanel
      * @return the j label
      */
     private JLabel newLabel(String h, ImageIcon i, Color c, StringTemplate t) {
-        if (h != null && Messages.containsKey(h)) h = Messages.message(h);
+        if (h != null && Messages.containsKey(h)) {
+			h = Messages.message(h);
+		}
         JLabel l = newLabel(h, i, c);
-        if (t != null) Utility.localizeToolTip(l, t);
+        if (t != null) {
+			Utility.localizeToolTip(l, t);
+		}
         return l;
     }
 
@@ -583,10 +609,14 @@ public final class ReportCompactColonyPanel extends ReportPanel
      */
     private JButton newButton(String action, String h, ImageIcon i,
                               Color c, StringTemplate t) {
-        if (h != null && Messages.containsKey(h)) h = Messages.message(h);
+        if (h != null && Messages.containsKey(h)) {
+			h = Messages.message(h);
+		}
         JButton b = Utility.getLinkButton(h, i, action);
         b.setForeground((c == null) ? Color.BLACK : c);
-        if (t != null) Utility.localizeToolTip(b, t);
+        if (t != null) {
+			Utility.localizeToolTip(b, t);
+		}
         b.addActionListener(this);
         return b;
     }
@@ -631,7 +661,8 @@ public final class ReportCompactColonyPanel extends ReportPanel
         color = getColor(s);
         String annotations = "", key;
         template = StringTemplate.label(",");
-        if ((building = s.colony.getStockade()) == null) {
+        building = s.colony.getStockade();
+        if (building == null) {
             key = "annotation.unfortified";
             template.add(Messages.message("report.colony.annotation.unfortified"));
         } else {
@@ -644,7 +675,9 @@ public final class ReportCompactColonyPanel extends ReportPanel
         if (!s.colony.getTile().isCoastland()) {
             key = "annotation.inland";
             template.add(Messages.message("report.colony.annotation.inland"));
-        } else if ((building = s.colony.getWorkLocationWithAbility(Ability.PRODUCE_IN_WATER, Building.class)) == null) {
+        } else 
+        	if ((building = s.colony.getWorkLocationWithAbility
+        	(Ability.PRODUCE_IN_WATER, Building.class)) == null) {
             key = "annotation.coastal";
             template.add(Messages.message("report.colony.annotation.coastal"));
         } else {
@@ -684,7 +717,9 @@ public final class ReportCompactColonyPanel extends ReportPanel
         button = newButton(cac, s.colony.getName() + annotations, null, color,
             StringTemplate.label(": ").add(s.colony.getName())
                 .add(Messages.message(template)));
-        if (s.famine) button.setFont(button.getFont().deriveFont(Font.BOLD));
+        if (s.famine) {
+			button.setFont(button.getFont().deriveFont(Font.BOLD));
+		}
         reportPanel.add(button, "newline");
 
         // Field: The number of colonists that can be added to a
@@ -716,7 +751,9 @@ public final class ReportCompactColonyPanel extends ReportPanel
         // Colour: Always cAlarm
         // Font: Bold if one of the tiles is the colony center.
         for (TileImprovementType ti : spec.getTileImprovementTypeList()) {
-            if (ti.isNatural()) continue;
+            if (ti.isNatural()) {
+				continue;
+			}
             n = returnN(s, n, ti);
 			boolean center = setCenter(s, ti);
 			
@@ -850,7 +887,7 @@ public final class ReportCompactColonyPanel extends ReportPanel
     /**
      * Extracted createButton from updateColony().
      *
-     * @param ColonySummary s
+     * @param s the s
      * @param qac the qac
      * @return the j button
      */
@@ -890,7 +927,7 @@ public final class ReportCompactColonyPanel extends ReportPanel
     /**
      * Extracted getColor() from updateColony.
      *
-     * @param ColonySummary s
+     * @param s the s
      * @return color
      */
     private Color getColor(ColonySummary s){
@@ -1211,7 +1248,8 @@ public final class ReportCompactColonyPanel extends ReportPanel
         // Accumulate all the summaries
         Map<Region, Integer> rRegionMap = new HashMap<>();
         List<TileImprovementSuggestion> rTileSuggestions = new ArrayList<>();
-        int rFamine = 0, rBonus = 0, rSizeChange = 0,
+        int rFamine = 0, rBonus = 0;
+        int rSizeChange = 0,
             teacherLen = 0, improveLen = 0;
         double rNewColonist = 0.0;
         Map<GoodsType, ColonySummary.GoodsProduction> rProduction
@@ -1280,7 +1318,9 @@ public final class ReportCompactColonyPanel extends ReportPanel
         // benefit from improvements.
         // Colour: cAlarm
         for (TileImprovementType ti : spec.getTileImprovementTypeList()) {
-            if (ti.isNatural()) continue;
+            if (ti.isNatural()) {
+				continue;
+			}
             tiles.clear();
             tiles.addAll(transformDistinct(rTileSuggestions,
                     (TileImprovementSuggestion ts) -> ts.tileImprovementType == ti,
