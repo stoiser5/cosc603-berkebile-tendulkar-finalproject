@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>PlayerTest.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">src (2) (May 16, 2016 9:23:11 PM)</a> &gt; <a href="../../index.html" class="el_group">FreeCol</a> &gt; <a href="../index.html" class="el_bundle">test/src</a> &gt; <a href="index.source.html" class="el_package">net.sf.freecol.common.model</a> &gt; <span class="el_source">PlayerTest.java</span></div><h1>PlayerTest.java</h1><pre class="source lang-java linenums">/**
+ *  Copyright (C) 2002-2016  The FreeCol Team
+ *
+ *  This file is part of FreeCol.
+ *
+ *  FreeCol is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  FreeCol is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with FreeCol.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+ */
+
+package net.sf.freecol.common.model;
+
+import java.awt.Color;
+import java.util.Iterator;
+
+import net.sf.freecol.common.i18n.Messages;
+import net.sf.freecol.server.model.ServerGame;
+import net.sf.freecol.server.model.ServerPlayer;
+import net.sf.freecol.server.model.ServerUnit;
+import net.sf.freecol.util.test.FreeColTestCase;
+
+
+// TODO: Auto-generated Javadoc
+/**
+ * The Class PlayerTest.
+ */
+<span class="fc" id="L36">public class PlayerTest extends FreeColTestCase {</span>
+    
+    /** The Constant freeColonist. */
+<span class="fc" id="L39">    private static final UnitType freeColonist</span>
+<span class="fc" id="L40">        = spec().getUnitType(&quot;model.unit.freeColonist&quot;);</span>
+    
+    /** The Constant galleonType. */
+<span class="fc" id="L43">    private static final UnitType galleonType</span>
+<span class="fc" id="L44">        = spec().getUnitType(&quot;model.unit.galleon&quot;);</span>
+    
+    /**
+     * Test get land price.
+     */
+    @SuppressWarnings(&quot;null&quot;)
+	public void testGetLandPrice(){
+<span class="nc" id="L51">    	Specification specification = spec(&quot;freecol&quot;);</span>
+<span class="nc" id="L52">    	Game game = getStandardGame();</span>
+    	
+<span class="nc" id="L54">        Player dutch = game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+<span class="nc" id="L55">        Tile tile = new Tile(game, specification.getId());</span>
+<span class="nc" id="L56">        int price = dutch.getLandPrice(tile);</span>
+<span class="nc" id="L57">        assertEquals(0, price);</span>
+        
+<span class="nc" id="L59">        Specification specification1 = spec(&quot;freecol&quot;);</span>
+<span class="nc" id="L60">    	Game game1 = getStandardGame();</span>
+<span class="nc" id="L61">        Player dutchREF = game1.getPlayerByNationId(&quot;model.nation.dutchREF&quot;);</span>
+<span class="nc" id="L62">        Tile tile1 = new Tile(game1, specification1.getId());</span>
+        
+<span class="nc" id="L64">        int price1 = dutchREF.getLandPrice(tile1);</span>
+<span class="nc" id="L65">        assertEquals(0, price1);</span>
+        
+<span class="nc" id="L67">    }</span>
+    
+    /**
+     * Testcheck declare independence.
+     */
+    public void testcheckDeclareIndependence(){
+<span class="nc" id="L73">    	Game game = getStandardGame();</span>
+<span class="nc" id="L74">        Player dutch = game.getPlayerByNationId(&quot;model.nation.dutchREF&quot;);</span>
+<span class="nc" id="L75">        StringTemplate template = dutch.checkDeclareIndependence();</span>
+<span class="nc" id="L76">        assertEquals(StringTemplate.template(&quot;model.player.colonialIndependence&quot;),</span>
+<span class="nc" id="L77">        		template);</span>
+    	
+<span class="nc" id="L79">    }</span>
+    
+    /**
+     * Test get nation color.
+     */
+    public void testGetNationColor(){
+<span class="nc" id="L85">    	Game game = getStandardGame();</span>
+<span class="nc" id="L86">        Player dutch = game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+<span class="nc" id="L87">        Color color = dutch.getNationColor();</span>
+<span class="nc" id="L88">        assertEquals(game.getSpecification().getNation(&quot;model.nation.dutch&quot;).getColor(), color);</span>
+        
+<span class="nc" id="L90">    }</span>
+    
+    /**
+     * Test is potential enemy.
+     */
+    public void testIsPotentialEnemy(){
+    	
+<span class="nc" id="L97">    	Game game = getStandardGame();</span>
+<span class="nc" id="L98">        Player dutch = game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+<span class="nc" id="L99">        Player dutchREF_p1 = game.getPlayerByNationId(&quot;model.nation.dutchREF&quot;);</span>
+<span class="nc" id="L100">        Player dutchREF_p2 = game.getPlayerByNationId(&quot;model.nation.dutchREF&quot;);</span>
+        
+<span class="nc" id="L102">        dutch.setStance(dutchREF_p1, Stance.CEASE_FIRE);</span>
+<span class="nc" id="L103">        assertTrue(dutch.isPotentialEnemy(dutchREF_p1));</span>
+
+<span class="nc" id="L105">        dutch.setStance(dutchREF_p1, Stance.PEACE);</span>
+<span class="nc" id="L106">        assertTrue(dutch.isPotentialEnemy(dutchREF_p2));</span>
+
+<span class="nc" id="L108">        dutchREF_p2.setStance(dutch, Stance.CEASE_FIRE);</span>
+<span class="nc" id="L109">        assertFalse(dutchREF_p2.isPotentialEnemy(dutch));</span>
+<span class="nc" id="L110">    }</span>
+    
+    /**
+     * Test is potential friend.
+     */
+    public void testIsPotentialFriend(){
+    	
+<span class="nc" id="L117">    	Game game = getStandardGame();</span>
+<span class="nc" id="L118">        Player dutch = game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+<span class="nc" id="L119">        Player dutchREF_p1 = game.getPlayerByNationId(&quot;model.nation.dutchREF&quot;);</span>
+<span class="nc" id="L120">        Player dutchREF_p2 = game.getPlayerByNationId(&quot;model.nation.dutchREF&quot;);</span>
+        
+        //dutchREF_p1.setStance(dutch, Stance.WAR);
+<span class="nc" id="L123">        dutch.setStance(dutchREF_p1, Stance.WAR);</span>
+<span class="nc" id="L124">        assertTrue(dutch.isPotentialFriend(dutchREF_p1));</span>
+
+<span class="nc" id="L126">        dutchREF_p1.setStance(dutch, Stance.CEASE_FIRE);</span>
+<span class="nc" id="L127">        assertTrue(dutch.isPotentialFriend(dutchREF_p1));</span>
+
+<span class="nc" id="L129">        dutchREF_p2.setStance(dutch, Stance.WAR);</span>
+<span class="nc" id="L130">        assertFalse(dutchREF_p2.isPotentialFriend(dutch));</span>
+<span class="nc" id="L131">    }</span>
+    
+    
+    /**
+     * Test get nation label.
+     */
+    public void testGetNationLabel(){
+    	
+<span class="nc" id="L139">    	Game game = getStandardGame();</span>
+<span class="nc" id="L140">        Player dutch = game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+        
+<span class="nc" id="L142">        StringTemplate template = new StringTemplate();</span>
+<span class="nc" id="L143">        template = dutch.getNationLabel();</span>
+<span class="nc" id="L144">        assertEquals(StringTemplate.key(Messages.nameKey(dutch.getNationId())), template);</span>
+       
+        
+<span class="nc" id="L147">    }</span>
+    
+    /**
+     * Test get country label.
+     */
+    public void testGetCountryLabel(){
+<span class="nc" id="L153">    	Game game = getStandardGame();</span>
+<span class="nc" id="L154">        Player dutch = game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+<span class="nc" id="L155">        StringTemplate template = new StringTemplate();</span>
+<span class="nc" id="L156">        template = dutch.getCountryLabel();</span>
+<span class="nc" id="L157">        assertEquals(StringTemplate.template(&quot;countryName&quot;)</span>
+<span class="nc" id="L158">                .addStringTemplate(&quot;%nation%&quot;, dutch.getNationLabel()), template);</span>
+    	
+<span class="nc" id="L160">    }</span>
+    
+    /**
+     * Test get forces label.
+     */
+    public void testGetForcesLabel(){
+<span class="nc" id="L166">    	Game game = getStandardGame();</span>
+<span class="nc" id="L167">        Player dutch = game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+<span class="nc" id="L168">        StringTemplate template = dutch.getForcesLabel();</span>
+<span class="nc" id="L169">        assertEquals(StringTemplate.template(&quot;model.player.forces&quot;)</span>
+<span class="nc" id="L170">            .addStringTemplate(&quot;%nation%&quot;, dutch.getNationLabel()),</span>
+<span class="nc" id="L171">            template);</span>
+<span class="nc" id="L172">    }</span>
+    
+    /**
+     * Test get waiting label.
+     */
+    public void testGetWaitingLabel(){
+<span class="nc" id="L178">    	Game game = getStandardGame();</span>
+<span class="nc" id="L179">        Player dutch = game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+<span class="nc" id="L180">        StringTemplate template = dutch.getWaitingLabel();</span>
+<span class="nc" id="L181">        assertEquals(StringTemplate.template(&quot;model.player.waitingFor&quot;)</span>
+<span class="nc" id="L182">                .addStringTemplate(&quot;%nation%&quot;, dutch.getNationLabel()),</span>
+<span class="nc" id="L183">            template);</span>
+    	
+    	
+<span class="nc" id="L186">    }</span>
+    
+    /**
+     * Test get market name.
+     */
+    public void testGetMarketName(){
+<span class="nc" id="L192">    	Game game = getStandardGame();</span>
+<span class="nc" id="L193">        Player inca = game.getPlayerByNationId(&quot;model.nation.inca&quot;);</span>
+<span class="nc" id="L194">        StringTemplate template = inca.getMarketName();</span>
+<span class="nc" id="L195">        assertEquals(StringTemplate.key(&quot;model.player.independentMarket&quot;), template);</span>
+   
+<span class="nc" id="L197">        Player dutch = game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+<span class="nc" id="L198">        StringTemplate template1 = dutch.getMarketName();</span>
+<span class="nc" id="L199">        assertEquals(StringTemplate.key(dutch.getEuropeNameKey()), template1);</span>
+    
+<span class="nc" id="L201">    }</span>
+    
+    /**
+     * Test get rank.
+     */
+    public void testGetRank(){
+    	
+<span class="nc" id="L208">    	Game game = getStandardGame();</span>
+<span class="nc" id="L209">        Player dutch = game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+<span class="nc" id="L210">        int rank = dutch.getRank();</span>
+<span class="nc" id="L211">    	assertEquals(1,rank);</span>
+    	
+<span class="nc" id="L213">    	Player french = game.getPlayerByNationId(&quot;model.nation.french&quot;);</span>
+<span class="nc" id="L214">    	french.setAI(true);</span>
+<span class="nc" id="L215">    	int rank1 = french.getRank();</span>
+<span class="nc" id="L216">    	assertEquals(3,rank1);</span>
+    	
+<span class="nc" id="L218">    	Player inca = game.getPlayerByNationId(&quot;model.nation.inca&quot;);</span>
+<span class="nc" id="L219">    	int rank2 = inca.getRank();</span>
+<span class="nc" id="L220">    	assertEquals(2,rank2);</span>
+    	
+<span class="nc" id="L222">    } </span>
+      
+      /**
+       * Test modify gold.
+       */
+      public void testModifyGold(){
+    	  
+<span class="nc" id="L229">    	  Game game = getStandardGame();</span>
+<span class="nc" id="L230">          Player dutch = game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+<span class="nc" id="L231">          int gold = dutch.modifyGold(0);</span>
+<span class="nc" id="L232">          assertEquals(0,gold);</span>
+          
+<span class="nc" id="L234">          int newGold = 5;</span>
+<span class="nc" id="L235">          dutch.setGold(newGold);</span>
+<span class="nc" id="L236">          int gold1 = dutch.modifyGold(newGold);</span>
+<span class="nc" id="L237">          assertEquals(10,gold1);</span>
+          
+    	  
+<span class="nc" id="L240">      }</span>
+      
+      /**
+       * Testget total immigration production.
+       */
+      public void testgetTotalImmigrationProduction(){
+    	  
+<span class="nc" id="L247">    	  Game game = getStandardGame();</span>
+<span class="nc" id="L248">          Player dutch = game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+<span class="nc" id="L249">          int prod = dutch.getTotalImmigrationProduction();</span>
+<span class="nc" id="L250">          assertEquals(2, prod);</span>
+          
+<span class="nc" id="L252">          Player tupi = game.getPlayerByNationId(&quot;model.nation.tupi&quot;);</span>
+<span class="nc" id="L253">          int prod1 = tupi.getTotalImmigrationProduction();</span>
+<span class="nc" id="L254">          assertEquals(0, prod1);</span>
+<span class="nc" id="L255">      }</span>
+      
+      /**
+       * Test can own tile.
+       */
+      public void testCanOwnTile(){
+<span class="nc" id="L261">    	  Specification specification = spec(&quot;freecol&quot;);</span>
+<span class="nc" id="L262">    	  Game game = getStandardGame();</span>
+<span class="nc" id="L263">          Player dutch = game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+         
+<span class="nc" id="L265">          Tile tile = new Tile(game, specification.getId());</span>
+         
+<span class="nc" id="L267">          boolean canOwn = dutch.canOwnTile(tile);</span>
+<span class="nc" id="L268">          assertTrue(canOwn);</span>
+    	  
+<span class="nc" id="L270">      }</span>
+      
+    
+       /**
+        * Test set nation.
+        */
+       public void testSetNation() {
+<span class="nc" id="L277">        Specification specification = spec(&quot;freecol&quot;);</span>
+<span class="nc" id="L278">        Game game = getStandardGame();</span>
+<span class="nc" id="L279">        NationOptions nationOptions = new NationOptions(specification);</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">        for (Nation nation : specification.getEuropeanNations()) {</span>
+<span class="nc" id="L281">            nationOptions.setNationState(nation, NationOptions.NationState.AVAILABLE);</span>
+        }
+<span class="nc" id="L283">        game.setNationOptions(nationOptions);</span>
+
+<span class="nc" id="L285">        specification.applyDifficultyLevel(&quot;model.difficulty.medium&quot;);</span>
+
+<span class="nc" id="L287">        Player player = game.getPlayerByNationId(&quot;model.nation.english&quot;);</span>
+        
+<span class="nc" id="L289">        Nation newNation = specification.getNation(&quot;model.nation.dutch&quot;);</span>
+<span class="nc" id="L290">        player.setNation(newNation);</span>
+		
+<span class="nc" id="L292">		assertEquals(player.getNationId(), &quot;model.nation.dutch&quot;);</span>
+                
+<span class="nc" id="L294">    }</span>
+       
+    
+    /**
+     * Test units.
+     */
+    public void testUnits() {
+<span class="nc" id="L301">        Game game = getStandardGame();</span>
+<span class="nc" id="L302">        Player dutch = game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+<span class="nc" id="L303">        Player french = game.getPlayerByNationId(&quot;model.nation.french&quot;);</span>
+<span class="nc" id="L304">        Map map = getTestMap(spec().getTileType(&quot;model.tile.plains&quot;));</span>
+<span class="nc" id="L305">        game.setMap(map);</span>
+<span class="nc" id="L306">        map.getTile(4, 7).setExplored(dutch, true);</span>
+<span class="nc" id="L307">        map.getTile(4, 8).setExplored(dutch, true);</span>
+<span class="nc" id="L308">        map.getTile(5, 7).setExplored(dutch, true);</span>
+<span class="nc" id="L309">        map.getTile(5, 8).setExplored(dutch, true);</span>
+
+<span class="nc" id="L311">        UnitType freeColonist = spec().getUnitType(&quot;model.unit.freeColonist&quot;);</span>
+
+<span class="nc" id="L313">        Unit unit1 = new ServerUnit(game, map.getTile(4, 7), dutch,</span>
+<span class="nc" id="L314">                                    freeColonist);</span>
+<span class="nc" id="L315">        Unit unit2 = new ServerUnit(game, map.getTile(4, 8), dutch,</span>
+<span class="nc" id="L316">                                    freeColonist);</span>
+<span class="nc" id="L317">        Unit unit3 = new ServerUnit(game, map.getTile(5, 7), dutch,</span>
+<span class="nc" id="L318">                                    freeColonist);</span>
+<span class="nc" id="L319">        Unit unit4 = new ServerUnit(game, map.getTile(5, 8), dutch,</span>
+<span class="nc" id="L320">                                    freeColonist);</span>
+
+<span class="nc" id="L322">        int count = 0;</span>
+<span class="nc" id="L323">        Iterator&lt;Unit&gt; unitIterator = dutch.getUnitIterator();</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">        while (unitIterator.hasNext()) {</span>
+<span class="nc" id="L325">            unitIterator.next();</span>
+<span class="nc" id="L326">            count++;</span>
+        }
+<span class="nc bnc" id="L328" title="All 2 branches missed.">        assertTrue(count == 4);</span>
+
+<span class="nc" id="L330">        unit1.dispose();</span>
+<span class="nc" id="L331">        assertFalse(dutch.hasUnit(unit1));</span>
+
+<span class="nc" id="L333">        unit2.changeOwner(french);</span>
+<span class="nc" id="L334">        assertFalse(dutch.hasUnit(unit2));</span>
+<span class="nc" id="L335">        assertTrue(french.hasUnit(unit2));</span>
+<span class="nc" id="L336">    }</span>
+
+    /**
+     * Test european player.
+     *
+     * @param player the player
+     */
+    public void testEuropeanPlayer(Player player) {
+<span class="nc" id="L344">        assertTrue(player.canBuildColonies());</span>
+<span class="nc" id="L345">        assertTrue(player.canHaveFoundingFathers());</span>
+<span class="nc" id="L346">        assertTrue(player.canMoveToEurope());</span>
+<span class="nc" id="L347">        assertTrue(player.isColonial());</span>
+<span class="nc" id="L348">        assertFalse(player.isDead());</span>
+<span class="nc" id="L349">        assertTrue(player.isEuropean());</span>
+<span class="nc" id="L350">        assertFalse(player.isIndian());</span>
+<span class="nc" id="L351">        assertFalse(player.isREF());</span>
+<span class="nc" id="L352">        assertEquals(2, player.getMaximumFoodConsumption());</span>
+<span class="nc" id="L353">    }</span>
+
+    /**
+     * Test indian player.
+     *
+     * @param player the player
+     */
+    public void testIndianPlayer(Player player) {
+<span class="nc" id="L361">        assertFalse(player.canBuildColonies());</span>
+<span class="nc" id="L362">        assertFalse(player.canHaveFoundingFathers());</span>
+<span class="nc" id="L363">        assertFalse(player.canMoveToEurope());</span>
+<span class="nc" id="L364">        assertFalse(player.isColonial());</span>
+<span class="nc" id="L365">        assertFalse(player.isDead());</span>
+<span class="nc" id="L366">        assertFalse(player.isEuropean());</span>
+<span class="nc" id="L367">        assertTrue(player.isIndian());</span>
+<span class="nc" id="L368">        assertFalse(player.isREF());</span>
+<span class="nc" id="L369">        assertEquals(2, player.getMaximumFoodConsumption());</span>
+<span class="nc" id="L370">    }</span>
+
+    /**
+     * Test royal player.
+     *
+     * @param player the player
+     */
+    public void testRoyalPlayer(Player player) {
+<span class="nc" id="L378">        assertFalse(player.canBuildColonies());</span>
+<span class="nc" id="L379">        assertFalse(player.canHaveFoundingFathers());</span>
+<span class="nc" id="L380">        assertTrue(player.canMoveToEurope());</span>
+<span class="nc" id="L381">        assertFalse(player.isColonial());</span>
+<span class="nc" id="L382">        assertEquals(player.getPlayerType(), Player.PlayerType.ROYAL);</span>
+<span class="nc" id="L383">        assertFalse(player.isDead());</span>
+<span class="nc" id="L384">        assertTrue(player.isEuropean());</span>
+<span class="nc" id="L385">        assertFalse(player.isIndian());</span>
+<span class="nc" id="L386">        assertTrue(player.isREF());</span>
+<span class="nc" id="L387">        assertEquals(2, player.getMaximumFoodConsumption());</span>
+<span class="nc" id="L388">    }</span>
+
+    /**
+     * Test classic players.
+     */
+    public void testClassicPlayers() {
+<span class="nc" id="L394">        Game game = getStandardGame(&quot;classic&quot;);</span>
+
+        // europeans
+<span class="nc" id="L397">        Player dutch = game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+<span class="nc" id="L398">        Player french = game.getPlayerByNationId(&quot;model.nation.french&quot;);</span>
+<span class="nc" id="L399">        Player english = game.getPlayerByNationId(&quot;model.nation.english&quot;);</span>
+<span class="nc" id="L400">        Player spanish = game.getPlayerByNationId(&quot;model.nation.spanish&quot;);</span>
+
+<span class="nc" id="L402">        testEuropeanPlayer(dutch);</span>
+<span class="nc" id="L403">        testEuropeanPlayer(french);</span>
+<span class="nc" id="L404">        testEuropeanPlayer(english);</span>
+<span class="nc" id="L405">        testEuropeanPlayer(spanish);</span>
+
+        // indians
+<span class="nc" id="L408">        Player inca = game.getPlayerByNationId(&quot;model.nation.inca&quot;);</span>
+<span class="nc" id="L409">        Player aztec = game.getPlayerByNationId(&quot;model.nation.aztec&quot;);</span>
+<span class="nc" id="L410">        Player arawak = game.getPlayerByNationId(&quot;model.nation.arawak&quot;);</span>
+<span class="nc" id="L411">        Player cherokee = game.getPlayerByNationId(&quot;model.nation.cherokee&quot;);</span>
+<span class="nc" id="L412">        Player iroquois = game.getPlayerByNationId(&quot;model.nation.iroquois&quot;);</span>
+<span class="nc" id="L413">        Player sioux = game.getPlayerByNationId(&quot;model.nation.sioux&quot;);</span>
+<span class="nc" id="L414">        Player apache = game.getPlayerByNationId(&quot;model.nation.apache&quot;);</span>
+<span class="nc" id="L415">        Player tupi = game.getPlayerByNationId(&quot;model.nation.tupi&quot;);</span>
+<span class="nc" id="L416">        testIndianPlayer(inca);</span>
+<span class="nc" id="L417">        testIndianPlayer(aztec);</span>
+<span class="nc" id="L418">        testIndianPlayer(arawak);</span>
+<span class="nc" id="L419">        testIndianPlayer(cherokee);</span>
+<span class="nc" id="L420">        testIndianPlayer(iroquois);</span>
+<span class="nc" id="L421">        testIndianPlayer(sioux);</span>
+<span class="nc" id="L422">        testIndianPlayer(apache);</span>
+<span class="nc" id="L423">        testIndianPlayer(tupi);</span>
+
+        // royal
+<span class="nc" id="L426">        Player dutchREF = game.getPlayerByNationId(&quot;model.nation.dutchREF&quot;);</span>
+<span class="nc" id="L427">        Player frenchREF = game.getPlayerByNationId(&quot;model.nation.frenchREF&quot;);</span>
+<span class="nc" id="L428">        Player englishREF = game.getPlayerByNationId(&quot;model.nation.englishREF&quot;);</span>
+<span class="nc" id="L429">        Player spanishREF = game.getPlayerByNationId(&quot;model.nation.spanishREF&quot;);</span>
+<span class="nc" id="L430">        testRoyalPlayer(dutchREF);</span>
+<span class="nc" id="L431">        testRoyalPlayer(frenchREF);</span>
+<span class="nc" id="L432">        testRoyalPlayer(englishREF);</span>
+<span class="nc" id="L433">        testRoyalPlayer(spanishREF);</span>
+<span class="nc" id="L434">        assertEquals(dutchREF, dutch.getREFPlayer());</span>
+<span class="nc" id="L435">        assertEquals(frenchREF, french.getREFPlayer());</span>
+<span class="nc" id="L436">        assertEquals(englishREF, english.getREFPlayer());</span>
+<span class="nc" id="L437">        assertEquals(spanishREF, spanish.getREFPlayer());</span>
+
+<span class="nc" id="L439">    }</span>
+
+    /**
+     * Test freecol players.
+     */
+    public void testFreecolPlayers() {
+        // the initialization code is basically the same as in
+        // getStandardGame(), except that all European nations are
+        // available
+<span class="nc" id="L448">        Specification specification = spec(&quot;freecol&quot;);</span>
+<span class="nc" id="L449">        Game game = new ServerGame(specification);</span>
+<span class="nc" id="L450">        NationOptions nationOptions = new NationOptions(specification);</span>
+<span class="nc bnc" id="L451" title="All 2 branches missed.">        for (Nation nation : specification.getEuropeanNations()) {</span>
+<span class="nc" id="L452">            nationOptions.setNationState(nation, NationOptions.NationState.AVAILABLE);</span>
+        }
+<span class="nc" id="L454">        game.setNationOptions(nationOptions);</span>
+
+<span class="nc" id="L456">        specification.applyDifficultyLevel(&quot;model.difficulty.medium&quot;);</span>
+<span class="nc bnc" id="L457" title="All 2 branches missed.">        for (Nation n : specification.getNations()) {</span>
+<span class="nc bnc" id="L458" title="All 2 branches missed.">            if (n.isUnknownEnemy()) continue;</span>
+<span class="nc" id="L459">            Player p = new ServerPlayer(game, false, n, null, null);</span>
+<span class="nc bnc" id="L460" title="All 4 branches missed.">            p.setAI(!n.getType().isEuropean() || n.getType().isREF());</span>
+<span class="nc" id="L461">            game.addPlayer(p);</span>
+        }
+
+        // europeans
+<span class="nc" id="L465">        Player dutch = game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+<span class="nc" id="L466">        Player french = game.getPlayerByNationId(&quot;model.nation.french&quot;);</span>
+<span class="nc" id="L467">        Player english = game.getPlayerByNationId(&quot;model.nation.english&quot;);</span>
+<span class="nc" id="L468">        Player spanish = game.getPlayerByNationId(&quot;model.nation.spanish&quot;);</span>
+<span class="nc" id="L469">        Player portuguese = game.getPlayerByNationId(&quot;model.nation.portuguese&quot;);</span>
+<span class="nc" id="L470">        Player swedish = game.getPlayerByNationId(&quot;model.nation.swedish&quot;);</span>
+<span class="nc" id="L471">        Player danish = game.getPlayerByNationId(&quot;model.nation.danish&quot;);</span>
+<span class="nc" id="L472">        Player russian = game.getPlayerByNationId(&quot;model.nation.russian&quot;);</span>
+
+<span class="nc" id="L474">        testEuropeanPlayer(dutch);</span>
+<span class="nc" id="L475">        testEuropeanPlayer(french);</span>
+<span class="nc" id="L476">        testEuropeanPlayer(english);</span>
+<span class="nc" id="L477">        testEuropeanPlayer(spanish);</span>
+<span class="nc" id="L478">        testEuropeanPlayer(portuguese);</span>
+<span class="nc" id="L479">        testEuropeanPlayer(swedish);</span>
+<span class="nc" id="L480">        testEuropeanPlayer(danish);</span>
+<span class="nc" id="L481">        testEuropeanPlayer(russian);</span>
+
+        // indians
+<span class="nc" id="L484">        Player inca = game.getPlayerByNationId(&quot;model.nation.inca&quot;);</span>
+<span class="nc" id="L485">        Player aztec = game.getPlayerByNationId(&quot;model.nation.aztec&quot;);</span>
+<span class="nc" id="L486">        Player arawak = game.getPlayerByNationId(&quot;model.nation.arawak&quot;);</span>
+<span class="nc" id="L487">        Player cherokee = game.getPlayerByNationId(&quot;model.nation.cherokee&quot;);</span>
+<span class="nc" id="L488">        Player iroquois = game.getPlayerByNationId(&quot;model.nation.iroquois&quot;);</span>
+<span class="nc" id="L489">        Player sioux = game.getPlayerByNationId(&quot;model.nation.sioux&quot;);</span>
+<span class="nc" id="L490">        Player apache = game.getPlayerByNationId(&quot;model.nation.apache&quot;);</span>
+<span class="nc" id="L491">        Player tupi = game.getPlayerByNationId(&quot;model.nation.tupi&quot;);</span>
+<span class="nc" id="L492">        testIndianPlayer(inca);</span>
+<span class="nc" id="L493">        testIndianPlayer(aztec);</span>
+<span class="nc" id="L494">        testIndianPlayer(arawak);</span>
+<span class="nc" id="L495">        testIndianPlayer(cherokee);</span>
+<span class="nc" id="L496">        testIndianPlayer(iroquois);</span>
+<span class="nc" id="L497">        testIndianPlayer(sioux);</span>
+<span class="nc" id="L498">        testIndianPlayer(apache);</span>
+<span class="nc" id="L499">        testIndianPlayer(tupi);</span>
+
+        // royal
+<span class="nc" id="L502">        Player dutchREF = game.getPlayerByNationId(&quot;model.nation.dutchREF&quot;);</span>
+<span class="nc" id="L503">        Player frenchREF = game.getPlayerByNationId(&quot;model.nation.frenchREF&quot;);</span>
+<span class="nc" id="L504">        Player englishREF = game.getPlayerByNationId(&quot;model.nation.englishREF&quot;);</span>
+<span class="nc" id="L505">        Player spanishREF = game.getPlayerByNationId(&quot;model.nation.spanishREF&quot;);</span>
+<span class="nc" id="L506">        Player portugueseREF = game.getPlayerByNationId(&quot;model.nation.portugueseREF&quot;);</span>
+<span class="nc" id="L507">        Player swedishREF = game.getPlayerByNationId(&quot;model.nation.swedishREF&quot;);</span>
+<span class="nc" id="L508">        Player danishREF = game.getPlayerByNationId(&quot;model.nation.danishREF&quot;);</span>
+<span class="nc" id="L509">        Player russianREF = game.getPlayerByNationId(&quot;model.nation.russianREF&quot;);</span>
+<span class="nc" id="L510">        testRoyalPlayer(dutchREF);</span>
+<span class="nc" id="L511">        testRoyalPlayer(frenchREF);</span>
+<span class="nc" id="L512">        testRoyalPlayer(englishREF);</span>
+<span class="nc" id="L513">        testRoyalPlayer(spanishREF);</span>
+<span class="nc" id="L514">        testRoyalPlayer(portugueseREF);</span>
+<span class="nc" id="L515">        testRoyalPlayer(swedishREF);</span>
+<span class="nc" id="L516">        testRoyalPlayer(danishREF);</span>
+<span class="nc" id="L517">        testRoyalPlayer(russianREF);</span>
+<span class="nc" id="L518">        assertEquals(dutchREF, dutch.getREFPlayer());</span>
+<span class="nc" id="L519">        assertEquals(frenchREF, french.getREFPlayer());</span>
+<span class="nc" id="L520">        assertEquals(englishREF, english.getREFPlayer());</span>
+<span class="nc" id="L521">        assertEquals(spanishREF, spanish.getREFPlayer());</span>
+<span class="nc" id="L522">        assertEquals(portugueseREF, portuguese.getREFPlayer());</span>
+<span class="nc" id="L523">        assertEquals(swedishREF, swedish.getREFPlayer());</span>
+<span class="nc" id="L524">        assertEquals(danishREF, danish.getREFPlayer());</span>
+<span class="nc" id="L525">        assertEquals(russianREF, russian.getREFPlayer());</span>
+<span class="nc" id="L526">    }</span>
+
+    /**
+     * Test tension.
+     */
+    public void testTension(){
+<span class="nc" id="L532">        String errMsg = &quot;&quot;;</span>
+<span class="nc" id="L533">        Game game = getStandardGame();</span>
+
+<span class="nc" id="L535">        ServerPlayer dutch = (ServerPlayer)game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+<span class="nc" id="L536">        ServerPlayer french = (ServerPlayer)game.getPlayerByNationId(&quot;model.nation.french&quot;);</span>
+
+<span class="nc" id="L538">        int initialTension = 500;</span>
+<span class="nc" id="L539">        int change = 250;</span>
+
+<span class="nc" id="L541">        dutch.setTension(french, new Tension(initialTension));</span>
+<span class="nc" id="L542">        french.setTension(dutch, new Tension(initialTension));</span>
+
+<span class="nc" id="L544">        dutch.getTension(french).modify(change);</span>
+
+<span class="nc" id="L546">        int expectedDutchTension = initialTension + change;</span>
+<span class="nc" id="L547">        int expectedFrenchTension = initialTension;</span>
+
+<span class="nc" id="L549">        errMsg = &quot;Dutch tension value should have changed&quot;;</span>
+<span class="nc" id="L550">        assertEquals(errMsg, expectedDutchTension, dutch.getTension(french).getValue());</span>
+<span class="nc" id="L551">        errMsg = &quot;French tension value should have remained the same&quot;;</span>
+<span class="nc" id="L552">        assertEquals(errMsg, expectedFrenchTension ,french.getTension(dutch).getValue());</span>
+<span class="nc" id="L553">    }</span>
+
+    /**
+     * Test add another players unit.
+     */
+    public void testAddAnotherPlayersUnit(){
+<span class="nc" id="L559">        Game game = getStandardGame();</span>
+<span class="nc" id="L560">        Map map = getTestMap();</span>
+<span class="nc" id="L561">        game.setMap(map);</span>
+
+<span class="nc" id="L563">        Player dutch =  game.getPlayerByNationId(&quot;model.nation.dutch&quot;);</span>
+<span class="nc" id="L564">        Player french = game.getPlayerByNationId(&quot;model.nation.french&quot;);</span>
+
+<span class="nc" id="L566">        assertEquals(&quot;Wrong number of units for dutch player&quot;,0,dutch.getUnits().size());</span>
+<span class="nc" id="L567">        assertEquals(&quot;Wrong number of units for french player&quot;,0,french.getUnits().size());</span>
+
+<span class="nc" id="L569">        Unit colonist = new ServerUnit(game, map.getTile(6, 8), dutch,</span>
+<span class="nc" id="L570">                                       freeColonist);</span>
+<span class="nc bnc" id="L571" title="All 2 branches missed.">        assertTrue(&quot;Colonist should be dutch&quot;, colonist.getOwner() == dutch);</span>
+<span class="nc" id="L572">        assertEquals(&quot;Wrong number of units for dutch player&quot;,1,dutch.getUnits().size());</span>
+
+        try{
+<span class="nc" id="L575">            french.addUnit(colonist);</span>
+<span class="nc" id="L576">            fail(&quot;An IllegalStateException should have been raised&quot;);</span>
+<span class="nc" id="L577">        }</span>
+<span class="nc" id="L578">        catch (IllegalStateException e) {</span>
+<span class="nc bnc" id="L579" title="All 2 branches missed.">            assertTrue(&quot;Colonist owner should not have been changed&quot;, colonist.getOwner() == dutch);</span>
+<span class="nc" id="L580">            assertEquals(&quot;Wrong number of units for dutch player&quot;,1,dutch.getUnits().size());</span>
+<span class="nc" id="L581">            assertEquals(&quot;Wrong number of units for french player&quot;,0,french.getUnits().size());</span>
+
+        }
+
+<span class="nc" id="L585">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>src (2) (May 16, 2016 9:23:11 PM)</div></body></html>
