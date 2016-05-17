@@ -19,6 +19,8 @@
 
 package net.sf.freecol.common.model;
 
+import static net.sf.freecol.common.util.CollectionUtils.toSortedList;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -30,9 +32,9 @@ import javax.xml.stream.XMLStreamException;
 
 import net.sf.freecol.common.io.FreeColXMLReader;
 import net.sf.freecol.common.io.FreeColXMLWriter;
-import static net.sf.freecol.common.util.CollectionUtils.*;
 
 
+// TODO: Auto-generated Javadoc
 /**
  * This class implements a simple economic model where a market holds
  * all goods to be sold and the price of a particular goods type is
@@ -40,7 +42,8 @@ import static net.sf.freecol.common.util.CollectionUtils.*;
  */
 public final class Market extends FreeColGameObject implements Ownable {
 
-    private static final Logger logger = Logger.getLogger(Market.class.getName());
+    /** The Constant LOGGER. */
+    private static final Logger LOGGER = Logger.getLogger(Market.class.getName());
 
     /**
      * European markets are bottomless.  Goods present never decrease
@@ -53,7 +56,11 @@ public final class Market extends FreeColGameObject implements Ownable {
      * when selling goods.
      */
     public static enum Access {
+        
+        /** The europe. */
         EUROPE,
+        
+        /** The custom house. */
         CUSTOM_HOUSE,
     }
 
@@ -102,6 +109,12 @@ public final class Market extends FreeColGameObject implements Ownable {
     }
 
 
+    /**
+     * Put market data.
+     *
+     * @param goodsType the goods type
+     * @param data the data
+     */
     private void putMarketData(GoodsType goodsType, MarketData data) {
         marketData.put(goodsType, data);
     }
@@ -146,7 +159,7 @@ public final class Market extends FreeColGameObject implements Ownable {
     }
 
     /**
-     * Has a type of goods been traded in this market?
+     * Has a type of goods been traded in this market?.
      *
      * @param type The type of goods to consider.
      * @return True if the goods type has been traded.
@@ -164,7 +177,10 @@ public final class Market extends FreeColGameObject implements Ownable {
      */
     public int getCostToBuy(GoodsType type) {
         MarketData data = getMarketData(type);
-        return (data == null) ? 0 : data.getCostToBuy();
+        if(data == null){
+        	return 0;
+        }
+        else return data.getCostToBuy();
     }
 
     /**
@@ -177,7 +193,11 @@ public final class Market extends FreeColGameObject implements Ownable {
      */
     public int getPaidForSale(GoodsType type) {
         MarketData data = getMarketData(type);
-        return (data == null) ? 0 : data.getPaidForSale();
+        if(data == null){
+        	return 0;
+        }
+        else return data.getPaidForSale();
+         
     }
 
     /**
@@ -194,6 +214,7 @@ public final class Market extends FreeColGameObject implements Ownable {
         data.setAmountInMarket(Math.max(MINIMUM_AMOUNT,
                                         data.getAmountInMarket() + amount));
         data.setTraded(true);
+        
         return data.price();
     }
 
@@ -228,7 +249,10 @@ public final class Market extends FreeColGameObject implements Ownable {
      */
     public int getBidPrice(GoodsType type, int amount) {
         MarketData data = getMarketData(type);
-        return (data == null) ? 0 : amount * data.getCostToBuy();
+        if(data == null){
+        	return 0;
+        }
+        else return amount * data.getCostToBuy();
     }
 
     /**
@@ -240,7 +264,10 @@ public final class Market extends FreeColGameObject implements Ownable {
      */
     public int getSalePrice(GoodsType type, int amount) {
         MarketData data = getMarketData(type);
-        return (data == null) ? 0 : amount * data.getPaidForSale();
+        if(data == null){
+        	return 0;
+        }
+        else return amount * data.getPaidForSale();
     }
 
     /**
@@ -261,7 +288,11 @@ public final class Market extends FreeColGameObject implements Ownable {
      */
     public int getArrears(GoodsType goodsType) {
         MarketData data = getMarketData(goodsType);
-        return (data == null) ? 0 : data.getArrears();
+        if(data == null){
+        return  0 ;
+        }
+        else 
+        return data.getArrears();
     }
 
     /**
@@ -283,7 +314,11 @@ public final class Market extends FreeColGameObject implements Ownable {
      */
     public int getSales(GoodsType goodsType) {
         MarketData data = getMarketData(goodsType);
-        return (data == null) ? 0 : data.getSales();
+        if(data == null){
+        	return 0;
+        }
+        else
+        return data.getSales();
     }
 
     /**
@@ -308,7 +343,11 @@ public final class Market extends FreeColGameObject implements Ownable {
      */
     public int getIncomeBeforeTaxes(GoodsType goodsType) {
         MarketData data = getMarketData(goodsType);
-        return (data == null) ? 0 : data.getIncomeBeforeTaxes();
+        if(data == null){
+        	return 0; 
+        }
+        else
+        return data.getIncomeBeforeTaxes();
     }
 
     /**
@@ -330,7 +369,11 @@ public final class Market extends FreeColGameObject implements Ownable {
      */
     public int getIncomeAfterTaxes(GoodsType goodsType) {
         MarketData data = getMarketData(goodsType);
-        return (data == null) ? 0 : data.getIncomeAfterTaxes();
+        if(data == null){
+        	 return 0;
+        }
+        else
+        return data.getIncomeAfterTaxes();
     }
 
     /**
@@ -352,11 +395,15 @@ public final class Market extends FreeColGameObject implements Ownable {
      */
     public int getAmountInMarket(GoodsType goodsType) {
         MarketData data = getMarketData(goodsType);
-        return (data == null) ? 0 : data.getAmountInMarket();
+        if(data == null){
+        	return 0;
+        }
+        else
+        return data.getAmountInMarket();
     }
 
     /**
-     * Has the price of a type of goods changed in this market?
+     * Has the price of a type of goods changed in this market?.
      *
      * @param goodsType The type of goods to consider.
      * @return True if the price has changed.
@@ -414,7 +461,9 @@ public final class Market extends FreeColGameObject implements Ownable {
      */
     public void update(GoodsType goodsType) {
         MarketData data = requireMarketData(goodsType);
-        if (data != null) data.update();
+        if (data != null) {
+			data.update();
+		}
     }
 
     /**
@@ -429,7 +478,7 @@ public final class Market extends FreeColGameObject implements Ownable {
     }
 
     /**
-     * Adds a transaction listener for notification of any transaction
+     * Adds a transaction listener for notification of any transaction.
      *
      * @param listener The <code>TransactionListener</code> to add.
      */
@@ -438,7 +487,7 @@ public final class Market extends FreeColGameObject implements Ownable {
     }
 
     /**
-     * Removes a transaction listener
+     * Removes a transaction listener.
      *
      * @param listener The <code>TransactionListener</code> to remove.
      */
@@ -486,12 +535,17 @@ public final class Market extends FreeColGameObject implements Ownable {
      */
     @Override
     public FreeColGameObject getLinkTarget(Player player) {
-        return (player == getOwner()) ? getOwner().getEurope() : null;
+    	if(player.equals(getOwner())){
+    		
+    		return getOwner().getEurope();
+    	}
+    	else return null;
     }
 
 
     // Serialization
 
+    /** The Constant OWNER_TAG. */
     private static final String OWNER_TAG = "owner";
 
 
