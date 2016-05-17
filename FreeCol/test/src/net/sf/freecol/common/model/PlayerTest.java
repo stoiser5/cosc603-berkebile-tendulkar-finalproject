@@ -23,21 +23,29 @@ import java.awt.Color;
 import java.util.Iterator;
 
 import net.sf.freecol.common.i18n.Messages;
-import net.sf.freecol.common.model.Player.NoClaimReason;
-import net.sf.freecol.common.model.Player.PlayerType;
 import net.sf.freecol.server.model.ServerGame;
 import net.sf.freecol.server.model.ServerPlayer;
 import net.sf.freecol.server.model.ServerUnit;
 import net.sf.freecol.util.test.FreeColTestCase;
 
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class PlayerTest.
+ */
 public class PlayerTest extends FreeColTestCase {
     
+    /** The Constant freeColonist. */
     private static final UnitType freeColonist
         = spec().getUnitType("model.unit.freeColonist");
+    
+    /** The Constant galleonType. */
     private static final UnitType galleonType
         = spec().getUnitType("model.unit.galleon");
     
+    /**
+     * Test get land price.
+     */
     @SuppressWarnings("null")
 	public void testGetLandPrice(){
     	Specification specification = spec("freecol");
@@ -58,6 +66,9 @@ public class PlayerTest extends FreeColTestCase {
         
     }
     
+    /**
+     * Testcheck declare independence.
+     */
     public void testcheckDeclareIndependence(){
     	Game game = getStandardGame();
         Player dutch = game.getPlayerByNationId("model.nation.dutchREF");
@@ -67,6 +78,9 @@ public class PlayerTest extends FreeColTestCase {
     	
     }
     
+    /**
+     * Test get nation color.
+     */
     public void testGetNationColor(){
     	Game game = getStandardGame();
         Player dutch = game.getPlayerByNationId("model.nation.dutch");
@@ -75,6 +89,9 @@ public class PlayerTest extends FreeColTestCase {
         
     }
     
+    /**
+     * Test is potential enemy.
+     */
     public void testIsPotentialEnemy(){
     	
     	Game game = getStandardGame();
@@ -92,6 +109,9 @@ public class PlayerTest extends FreeColTestCase {
         assertFalse(dutchREF_p2.isPotentialEnemy(dutch));
     }
     
+    /**
+     * Test is potential friend.
+     */
     public void testIsPotentialFriend(){
     	
     	Game game = getStandardGame();
@@ -111,6 +131,9 @@ public class PlayerTest extends FreeColTestCase {
     }
     
     
+    /**
+     * Test get nation label.
+     */
     public void testGetNationLabel(){
     	
     	Game game = getStandardGame();
@@ -123,6 +146,9 @@ public class PlayerTest extends FreeColTestCase {
         
     }
     
+    /**
+     * Test get country label.
+     */
     public void testGetCountryLabel(){
     	Game game = getStandardGame();
         Player dutch = game.getPlayerByNationId("model.nation.dutch");
@@ -133,6 +159,9 @@ public class PlayerTest extends FreeColTestCase {
     	
     }
     
+    /**
+     * Test get forces label.
+     */
     public void testGetForcesLabel(){
     	Game game = getStandardGame();
         Player dutch = game.getPlayerByNationId("model.nation.dutch");
@@ -142,6 +171,9 @@ public class PlayerTest extends FreeColTestCase {
             template);
     }
     
+    /**
+     * Test get waiting label.
+     */
     public void testGetWaitingLabel(){
     	Game game = getStandardGame();
         Player dutch = game.getPlayerByNationId("model.nation.dutch");
@@ -152,6 +184,10 @@ public class PlayerTest extends FreeColTestCase {
     	
     	
     }
+    
+    /**
+     * Test get market name.
+     */
     public void testGetMarketName(){
     	Game game = getStandardGame();
         Player inca = game.getPlayerByNationId("model.nation.inca");
@@ -163,6 +199,10 @@ public class PlayerTest extends FreeColTestCase {
         assertEquals(StringTemplate.key(dutch.getEuropeNameKey()), template1);
     
     }
+    
+    /**
+     * Test get rank.
+     */
     public void testGetRank(){
     	
     	Game game = getStandardGame();
@@ -180,6 +220,10 @@ public class PlayerTest extends FreeColTestCase {
     	assertEquals(2,rank2);
     	
     } 
+      
+      /**
+       * Test modify gold.
+       */
       public void testModifyGold(){
     	  
     	  Game game = getStandardGame();
@@ -195,6 +239,9 @@ public class PlayerTest extends FreeColTestCase {
     	  
       }
       
+      /**
+       * Testget total immigration production.
+       */
       public void testgetTotalImmigrationProduction(){
     	  
     	  Game game = getStandardGame();
@@ -206,6 +253,10 @@ public class PlayerTest extends FreeColTestCase {
           int prod1 = tupi.getTotalImmigrationProduction();
           assertEquals(0, prod1);
       }
+      
+      /**
+       * Test can own tile.
+       */
       public void testCanOwnTile(){
     	  Specification specification = spec("freecol");
     	  Game game = getStandardGame();
@@ -219,6 +270,9 @@ public class PlayerTest extends FreeColTestCase {
       }
       
     
+       /**
+        * Test set nation.
+        */
        public void testSetNation() {
         Specification specification = spec("freecol");
         Game game = getStandardGame();
@@ -238,7 +292,11 @@ public class PlayerTest extends FreeColTestCase {
 		assertEquals(player.getNationId(), "model.nation.dutch");
                 
     }
-
+       
+    
+    /**
+     * Test units.
+     */
     public void testUnits() {
         Game game = getStandardGame();
         Player dutch = game.getPlayerByNationId("model.nation.dutch");
@@ -277,6 +335,11 @@ public class PlayerTest extends FreeColTestCase {
         assertTrue(french.hasUnit(unit2));
     }
 
+    /**
+     * Test european player.
+     *
+     * @param player the player
+     */
     public void testEuropeanPlayer(Player player) {
         assertTrue(player.canBuildColonies());
         assertTrue(player.canHaveFoundingFathers());
@@ -289,6 +352,11 @@ public class PlayerTest extends FreeColTestCase {
         assertEquals(2, player.getMaximumFoodConsumption());
     }
 
+    /**
+     * Test indian player.
+     *
+     * @param player the player
+     */
     public void testIndianPlayer(Player player) {
         assertFalse(player.canBuildColonies());
         assertFalse(player.canHaveFoundingFathers());
@@ -301,6 +369,11 @@ public class PlayerTest extends FreeColTestCase {
         assertEquals(2, player.getMaximumFoodConsumption());
     }
 
+    /**
+     * Test royal player.
+     *
+     * @param player the player
+     */
     public void testRoyalPlayer(Player player) {
         assertFalse(player.canBuildColonies());
         assertFalse(player.canHaveFoundingFathers());
@@ -314,6 +387,9 @@ public class PlayerTest extends FreeColTestCase {
         assertEquals(2, player.getMaximumFoodConsumption());
     }
 
+    /**
+     * Test classic players.
+     */
     public void testClassicPlayers() {
         Game game = getStandardGame("classic");
 
@@ -362,6 +438,9 @@ public class PlayerTest extends FreeColTestCase {
 
     }
 
+    /**
+     * Test freecol players.
+     */
     public void testFreecolPlayers() {
         // the initialization code is basically the same as in
         // getStandardGame(), except that all European nations are
@@ -446,6 +525,9 @@ public class PlayerTest extends FreeColTestCase {
         assertEquals(russianREF, russian.getREFPlayer());
     }
 
+    /**
+     * Test tension.
+     */
     public void testTension(){
         String errMsg = "";
         Game game = getStandardGame();
@@ -470,6 +552,9 @@ public class PlayerTest extends FreeColTestCase {
         assertEquals(errMsg, expectedFrenchTension ,french.getTension(dutch).getValue());
     }
 
+    /**
+     * Test add another players unit.
+     */
     public void testAddAnotherPlayersUnit(){
         Game game = getStandardGame();
         Map map = getTestMap();

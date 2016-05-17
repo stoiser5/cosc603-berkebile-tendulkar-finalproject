@@ -19,15 +19,18 @@
 
 package net.sf.freecol.common.model;
 
-import net.sf.freecol.common.model.Specification;
 import net.sf.freecol.util.test.FreeColTestCase;
 
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class MarketTest.
+ */
 public class MarketTest extends FreeColTestCase {
 
     /**
      * Make sure that the initial prices are correctly taken from the
-     * specification
+     * specification.
      */
     public void testInitialMarket() {
 
@@ -44,6 +47,10 @@ public class MarketTest extends FreeColTestCase {
             assertEquals(good.toString(), good.getInitialSellPrice(), dm.getPaidForSale(good));
         }
     }
+    
+    /**
+     * Test has been traded.
+     */
     public void testHasBeenTraded(){
     	
     	Game game = getStandardGame();
@@ -59,6 +66,9 @@ public class MarketTest extends FreeColTestCase {
         assertFalse(market.hasBeenTraded(goodsType));
     }
     
+    /**
+     * Test get initial price.
+     */
     public void testGetInitialPrice(){
     	
     	Game game = getStandardGame();
@@ -72,6 +82,9 @@ public class MarketTest extends FreeColTestCase {
     	
     }
     
+    /**
+     * Test set initial price.
+     */
     public void testSetInitialPrice(){
     	
     	Game game = getStandardGame();
@@ -86,6 +99,9 @@ public class MarketTest extends FreeColTestCase {
     	
     }
     
+    /**
+     * Test get bid price.
+     */
     public void testGetBidPrice(){
     	Game game = getStandardGame();
 
@@ -100,17 +116,24 @@ public class MarketTest extends FreeColTestCase {
     	
     }
     
+    /**
+     * Test set arrears.
+     */
     public void testSetArrears(){
     	Game game = getStandardGame();
         Player player = game.getPlayerByNationId("model.nation.dutch");
         Specification specification = spec("freeCol");
         GoodsType goodsType = new GoodsType(specification.getId(), specification);
         Market market = player.getMarket();
+        
         market.setArrears(goodsType, 100);
         assertEquals(100, market.getArrears(goodsType));
     	
     }
     
+    /**
+     * Test modify income after taxes.
+     */
     public void testModifyIncomeAfterTaxes(){
     	
     	Game game = getStandardGame();
@@ -123,7 +146,10 @@ public class MarketTest extends FreeColTestCase {
     	
     }
     
-    	public void testModifyIncomeBeforeTaxes(){
+    	/**
+	     * Test modify income before taxes.
+	     */
+	    public void testModifyIncomeBeforeTaxes(){
     	
     	Game game = getStandardGame();
         Player player = game.getPlayerByNationId("model.nation.dutch");
@@ -135,6 +161,9 @@ public class MarketTest extends FreeColTestCase {
     	
     }
     	
+    /**
+     * Test update.
+     */
     public void testUpdate(){
     	Game game = getStandardGame();
         Player player = game.getPlayerByNationId("model.nation.dutch");
@@ -148,6 +177,9 @@ public class MarketTest extends FreeColTestCase {
     	
     }
     
+    /**
+     * Test set owner.
+     */
     public void testSetOwner(){
     	
     	Game game = getStandardGame();
@@ -158,6 +190,9 @@ public class MarketTest extends FreeColTestCase {
     	
     }
     
+    /**
+     * Test get amount in market.
+     */
     public void testGetAmountInMarket(){
     	
     	Game game = getStandardGame();
@@ -169,6 +204,10 @@ public class MarketTest extends FreeColTestCase {
         assertEquals(200, market.getAmountInMarket(goodsType));
         
     }
+    
+    /**
+     * Test get amount in market1.
+     */
     public void testGetAmountInMarket1(){
     	
     	Game game = getStandardGame();
@@ -179,7 +218,10 @@ public class MarketTest extends FreeColTestCase {
         assertEquals(0, market.getAmountInMarket(goodsType));
         
     }
-//    
+   
+    /**
+     * Test modify sales.
+     */
     public void testModifySales(){
     	
     	Game game = getStandardGame();
@@ -208,15 +250,34 @@ public class MarketTest extends FreeColTestCase {
 //    	
 //    }
 //    
+    
     /**
-     * Serialization and deserialization?
+ * Test get link target.
+ */
+    public void testGetLinkTarget(){
+    	
+      Game game = getStandardGame();
+      Player player = game.getPlayerByNationId("model.nation.dutch");
+      Market market = player.getMarket();
+      market.setOwner(player);
+      assertEquals( player.getEurope(), market.getLinkTarget(player));
+      
+      Player player1 = game.getPlayerByNationId("model.nation.french");
+      assertEquals( null, market.getLinkTarget(player1));
+      
+    	
+    }
+    
+    
+    /**
+     * Serialization and deserialization?.
      */
     public void testSerialization() {
         //fail();
     }
 
     /**
-     * Do the transaction listeners work?
+     * Do the transaction listeners work?.
      */
     public void testTransactionListeners() {
         //fail("Not yet implemented");

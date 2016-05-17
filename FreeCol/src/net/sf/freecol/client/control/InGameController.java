@@ -19,6 +19,17 @@
 
 package net.sf.freecol.client.control;
 
+import static net.sf.freecol.common.model.Constants.NO_TRADE;
+import static net.sf.freecol.common.model.Constants.NO_TRADE_GOODS;
+import static net.sf.freecol.common.model.Constants.NO_TRADE_HAGGLE;
+import static net.sf.freecol.common.model.Constants.NO_TRADE_HOSTILE;
+import static net.sf.freecol.common.model.Constants.STEAL_LAND;
+import static net.sf.freecol.common.util.CollectionUtils.allSame;
+import static net.sf.freecol.common.util.CollectionUtils.map;
+import static net.sf.freecol.common.util.CollectionUtils.toList;
+import static net.sf.freecol.common.util.CollectionUtils.toSortedList;
+import static net.sf.freecol.common.util.CollectionUtils.transform;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,7 +46,6 @@ import net.sf.freecol.FreeCol;
 import net.sf.freecol.client.ClientOptions;
 import net.sf.freecol.client.FreeColClient;
 import net.sf.freecol.client.gui.ChoiceItem;
-import net.sf.freecol.client.gui.GUI;
 import net.sf.freecol.client.gui.option.FreeColActionUI;
 import net.sf.freecol.common.debug.DebugUtils;
 import net.sf.freecol.common.debug.FreeColDebugger;
@@ -44,16 +54,23 @@ import net.sf.freecol.common.i18n.NameCache;
 import net.sf.freecol.common.io.FreeColDirectories;
 import net.sf.freecol.common.model.Ability;
 import net.sf.freecol.common.model.AbstractGoods;
-import net.sf.freecol.common.model.AbstractUnit;
 import net.sf.freecol.common.model.BuildableType;
 import net.sf.freecol.common.model.Building;
 import net.sf.freecol.common.model.Colony;
 import net.sf.freecol.common.model.ColonyTile;
 import net.sf.freecol.common.model.ColonyWas;
-import static net.sf.freecol.common.model.Constants.*;
+import net.sf.freecol.common.model.Constants.ArmedUnitSettlementAction;
+import net.sf.freecol.common.model.Constants.ClaimAction;
+import net.sf.freecol.common.model.Constants.MissionaryAction;
+import net.sf.freecol.common.model.Constants.ScoutColonyAction;
+import net.sf.freecol.common.model.Constants.ScoutIndianSettlementAction;
+import net.sf.freecol.common.model.Constants.TradeAction;
+import net.sf.freecol.common.model.Constants.TradeBuyAction;
+import net.sf.freecol.common.model.Constants.TradeSellAction;
 import net.sf.freecol.common.model.DiplomaticTrade;
 import net.sf.freecol.common.model.DiplomaticTrade.TradeContext;
 import net.sf.freecol.common.model.DiplomaticTrade.TradeStatus;
+import net.sf.freecol.common.model.Direction;
 import net.sf.freecol.common.model.Europe;
 import net.sf.freecol.common.model.Europe.MigrationType;
 import net.sf.freecol.common.model.EuropeWas;
@@ -70,7 +87,6 @@ import net.sf.freecol.common.model.IndianSettlement;
 import net.sf.freecol.common.model.Location;
 import net.sf.freecol.common.model.LostCityRumour;
 import net.sf.freecol.common.model.Map;
-import net.sf.freecol.common.model.Direction;
 import net.sf.freecol.common.model.Market;
 import net.sf.freecol.common.model.MarketWas;
 import net.sf.freecol.common.model.ModelMessage;
@@ -82,11 +98,10 @@ import net.sf.freecol.common.model.Ownable;
 import net.sf.freecol.common.model.PathNode;
 import net.sf.freecol.common.model.Player;
 import net.sf.freecol.common.model.Player.NoClaimReason;
-import net.sf.freecol.common.model.Stance;
 import net.sf.freecol.common.model.Region;
 import net.sf.freecol.common.model.Role;
 import net.sf.freecol.common.model.Settlement;
-import net.sf.freecol.common.model.Specification;
+import net.sf.freecol.common.model.Stance;
 import net.sf.freecol.common.model.StanceTradeItem;
 import net.sf.freecol.common.model.StringTemplate;
 import net.sf.freecol.common.model.Tile;
@@ -101,18 +116,18 @@ import net.sf.freecol.common.model.UnitType;
 import net.sf.freecol.common.model.UnitTypeChange.ChangeType;
 import net.sf.freecol.common.model.UnitWas;
 import net.sf.freecol.common.model.WorkLocation;
-import static net.sf.freecol.common.util.CollectionUtils.*;
-import net.sf.freecol.common.util.LogBuilder;
-import net.sf.freecol.common.networking.ServerAPI;
 import net.sf.freecol.common.option.BooleanOption;
+import net.sf.freecol.common.util.LogBuilder;
 import net.sf.freecol.server.FreeColServer;
 
 
+// TODO: Auto-generated Javadoc
 /**
  * The controller that will be used while the game is played.
  */
 public final class InGameController extends FreeColClientHolder {
 
+    /** The Constant logger. */
     private static final Logger logger = Logger.getLogger(InGameController.class.getName());
 
     /**
@@ -120,19 +135,38 @@ public final class InGameController extends FreeColClientHolder {
      * from the going-to list, or flush going-to and end the turn.
      */
     private static enum MoveMode {
+        
+        /** The next active unit. */
         NEXT_ACTIVE_UNIT,
+        
+        /** The execute goto orders. */
         EXECUTE_GOTO_ORDERS,
+        
+        /** The end turn. */
         END_TURN;
 
+        /**
+         * Minimize.
+         *
+         * @param m the m
+         * @return the move mode
+         */
         public MoveMode minimize(MoveMode m) {
             return (this.ordinal() > m.ordinal()) ? m : this;
         }
 
+        /**
+         * Maximize.
+         *
+         * @param m the m
+         * @return the move mode
+         */
         public MoveMode maximize(MoveMode m) {
             return (this.ordinal() < m.ordinal()) ? m : this;
         }
     }
 
+    /** The Constant UNIT_LAST_MOVE_DELAY. */
     private static final short UNIT_LAST_MOVE_DELAY = 300;
 
     /** A template to use as a magic cookie for aborted trades. */
@@ -1717,8 +1751,8 @@ public final class InGameController extends FreeColClientHolder {
      * @param unit The <code>Unit</code> that is a carrier containing goods.
      * @param direction The direction the unit could move in order to enter a
      *            <code>Settlement</code>.
-     * @see Settlement
      * @return True if the unit can move further.
+     * @see Settlement
      */
     private boolean moveTradeIndianSettlement(Unit unit, Direction direction) {
         IndianSettlement is
@@ -2420,7 +2454,7 @@ public final class InGameController extends FreeColClientHolder {
 
         // Unload everything that is on the carrier but not listed to
         // be loaded at this stop.
-        Game game = getGame();
+        //Game game = getGame();
         for (Goods goods : unit.getCompactGoodsList()) {
             GoodsType type = goods.getType();
             if (goodsTypesToLoad.contains(type)) continue; // Keep this cargo.
@@ -4068,10 +4102,14 @@ public final class InGameController extends FreeColClientHolder {
      * @return True if the new land was named.
      */
     public boolean nameNewLand(Unit unit, String name) {
-        if (unit == null || name == null) return false;
+        if (unit == null || name == null) {
+        	return false;
+        }
 
         // Respond to the server.
-        if (!askServer().newLandName(unit, name)) return false;
+        if (!askServer().newLandName(unit, name)) {
+        	return false;
+        }
 
         // The name is set, bring up the first landing panel.
         final Player player = unit.getOwner();
@@ -4107,7 +4145,9 @@ public final class InGameController extends FreeColClientHolder {
      */
     public boolean nameNewRegion(final Tile tile, final Unit unit,
                                  final Region region, final String name) {
-        if (tile == null || unit == null || region == null) return false;
+        if (tile == null || unit == null || region == null) {
+        	return false;
+        }
 
         return askServer().newRegionName(region, tile, unit, name);
     }
@@ -4495,7 +4535,9 @@ public final class InGameController extends FreeColClientHolder {
         if (!getFreeColClient().canSaveCurrentGame()) return false;
 
         final Game game = getGame();
-        if (game == null) return false; // Keyboard handling can race init
+        if (game == null) {
+        	return false; // Keyboard handling can race init
+        }
         String fileName = getSaveGameString(game);
         File file = getGUI().showSaveDialog(FreeColDirectories.getSaveDirectory(),
                                        fileName);
@@ -4627,7 +4669,9 @@ public final class InGameController extends FreeColClientHolder {
      * @return True if the message was sent.
      */
     public boolean sendChat(String chat) {
-        if (chat == null) return false;
+        if (chat == null) {
+        	return false;
+        }
 
         return askServer().chat(getMyPlayer(), chat);
     }
@@ -5013,7 +5057,7 @@ public final class InGameController extends FreeColClientHolder {
         if (!requireOurTurn() || unit == null
             || workLocation == null) return false;
 
-        StringTemplate template;
+       // StringTemplate template;
         if (unit.getStudent() != null
             && !getGUI().confirmAbandonEducation(unit, false)) return false;
 
