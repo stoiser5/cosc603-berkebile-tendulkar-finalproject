@@ -19,6 +19,16 @@
 
 package net.sf.freecol.server.generator;
 
+import static net.sf.freecol.common.util.CollectionUtils.descendingListLengthComparator;
+import static net.sf.freecol.common.util.CollectionUtils.find;
+import static net.sf.freecol.common.util.CollectionUtils.map;
+import static net.sf.freecol.common.util.CollectionUtils.none;
+import static net.sf.freecol.common.util.CollectionUtils.toList;
+import static net.sf.freecol.common.util.CollectionUtils.toMap;
+import static net.sf.freecol.common.util.RandomUtils.getRandomMember;
+import static net.sf.freecol.common.util.RandomUtils.randomInt;
+import static net.sf.freecol.common.util.RandomUtils.randomShuffle;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,6 +47,7 @@ import net.sf.freecol.common.model.Building;
 import net.sf.freecol.common.model.BuildingType;
 import net.sf.freecol.common.model.Colony;
 import net.sf.freecol.common.model.ColonyTile;
+import net.sf.freecol.common.model.Direction;
 import net.sf.freecol.common.model.EuropeanNationType;
 import net.sf.freecol.common.model.FreeColObject;
 import net.sf.freecol.common.model.Game;
@@ -48,7 +59,6 @@ import net.sf.freecol.common.model.IndianSettlement;
 import net.sf.freecol.common.model.LandMap;
 import net.sf.freecol.common.model.LostCityRumour;
 import net.sf.freecol.common.model.Map;
-import net.sf.freecol.common.model.Direction;
 import net.sf.freecol.common.model.Map.Position;
 import net.sf.freecol.common.model.Nation;
 import net.sf.freecol.common.model.NationType;
@@ -62,14 +72,12 @@ import net.sf.freecol.common.model.TileImprovementType;
 import net.sf.freecol.common.model.TileType;
 import net.sf.freecol.common.model.Unit;
 import net.sf.freecol.common.model.UnitType;
-import net.sf.freecol.common.option.IntegerOption;
 import net.sf.freecol.common.option.FileOption;
+import net.sf.freecol.common.option.IntegerOption;
 import net.sf.freecol.common.option.MapGeneratorOptions;
 import net.sf.freecol.common.option.OptionGroup;
 import net.sf.freecol.common.util.LogBuilder;
 import net.sf.freecol.common.util.RandomChoice;
-import static net.sf.freecol.common.util.CollectionUtils.*;
-import static net.sf.freecol.common.util.RandomUtils.*;
 import net.sf.freecol.server.FreeColServer;
 import net.sf.freecol.server.model.ServerBuilding;
 import net.sf.freecol.server.model.ServerColony;
@@ -79,6 +87,7 @@ import net.sf.freecol.server.model.ServerRegion;
 import net.sf.freecol.server.model.ServerUnit;
 
 
+// TODO: Auto-generated Javadoc
 /**
  * Creates random maps and sets the starting locations for the players.
  *
@@ -87,6 +96,7 @@ import net.sf.freecol.server.model.ServerUnit;
  */
 public class SimpleMapGenerator implements MapGenerator {
 
+    /** The Constant logger. */
     private static final Logger logger = Logger.getLogger(SimpleMapGenerator.class.getName());
 
     /**
@@ -97,22 +107,51 @@ public class SimpleMapGenerator implements MapGenerator {
     private static final float MIN_DISTANCE_FROM_POLE = 0.30f;
 
    
+    /**
+     * The Class Territory.
+     */
     private static class Territory {
+        
+        /** The region. */
         public ServerRegion region;
+        
+        /** The tile. */
         public Tile tile;
+        
+        /** The player. */
         public final Player player;
+        
+        /** The number of settlements. */
         public int numberOfSettlements;
 
+        /**
+         * Instantiates a new territory.
+         *
+         * @param player the player
+         * @param tile the tile
+         */
         public Territory(Player player, Tile tile) {
             this.player = player;
             this.tile = tile;
         }
 
+        /**
+         * Instantiates a new territory.
+         *
+         * @param player the player
+         * @param region the region
+         */
         public Territory(Player player, ServerRegion region) {
             this.player = player;
             this.region = region;
         }
 
+        /**
+         * Gets the center tile.
+         *
+         * @param map the map
+         * @return the center tile
+         */
         public Tile getCenterTile(Map map) {
             if (tile != null) return tile;
             int[] xy = region.getCenter();
@@ -145,7 +184,7 @@ public class SimpleMapGenerator implements MapGenerator {
 
 
     /**
-     * Creates a <code>MapGenerator</code>
+     * Creates a <code>MapGenerator</code>.
      *
      * @param game The <code>Game</code> to generate for.
      * @param random The <code>Random</code> number source to use.
@@ -248,6 +287,13 @@ public class SimpleMapGenerator implements MapGenerator {
             " lost city rumours of maximum ", number, ".\n");
     }
 
+    /**
+     * Import indian settlements.
+     *
+     * @param map the map
+     * @param lb the lb
+     * @return true, if successful
+     */
     private boolean importIndianSettlements(Map map, LogBuilder lb) {
         int nSettlements = 0;
         
@@ -628,6 +674,13 @@ public class SimpleMapGenerator implements MapGenerator {
         return good >= n / 2;
     }
 
+    /**
+     * Find free neighbouring tile.
+     *
+     * @param is the is
+     * @param tiles the tiles
+     * @return the tile
+     */
     private Tile findFreeNeighbouringTile(IndianSettlement is,
                                           List<Tile> tiles) {
         for (Tile tile : tiles) {
@@ -642,6 +695,14 @@ public class SimpleMapGenerator implements MapGenerator {
         return null;
     }
 
+    /**
+     * Gets the closest territory.
+     *
+     * @param map the map
+     * @param tile the tile
+     * @param territories the territories
+     * @return the closest territory
+     */
     private Territory getClosestTerritory(Map map, Tile tile,
                                           List<Territory> territories) {
         Territory result = null;
@@ -893,6 +954,16 @@ public class SimpleMapGenerator implements MapGenerator {
         }
     }
 
+    /**
+     * Find tile for.
+     *
+     * @param map the map
+     * @param row the row
+     * @param start the start
+     * @param startAtSea the start at sea
+     * @param lb the lb
+     * @return the tile
+     */
     private Tile findTileFor(Map map, int row, int start, boolean startAtSea,
                              LogBuilder lb) {
         Tile tile = null;
@@ -910,20 +981,28 @@ public class SimpleMapGenerator implements MapGenerator {
         return null;
     }
 
+    /**
+     * Creates the debug units.
+     *
+     * @param map the map
+     * @param player the player
+     * @param startTile the start tile
+     * @param lb the lb
+     */
     private void createDebugUnits(Map map, Player player, Tile startTile,
                                   LogBuilder lb) {
         // In debug mode give each player a few more units and a colony.
         UnitType unitType = spec.getUnitType("model.unit.galleon");
-        Unit unit4 = new ServerUnit(game, startTile, player, unitType);
+        //Unit unit4 = new ServerUnit(game, startTile, player, unitType);
         unitType = spec.getUnitType("model.unit.privateer");
         Unit privateer = new ServerUnit(game, startTile, player, unitType);
         ((ServerPlayer)player).exploreForUnit(privateer);
         unitType = spec.getUnitType("model.unit.freeColonist");
-        Unit unit5 = new ServerUnit(game, unit4, player, unitType);
+        //Unit unit5 = new ServerUnit(game, unit4, player, unitType);
         unitType = spec.getUnitType("model.unit.veteranSoldier");
-        Unit unit6 = new ServerUnit(game, unit4, player, unitType);
+        //Unit unit6 = new ServerUnit(game, unit4, player, unitType);
         unitType = spec.getUnitType("model.unit.jesuitMissionary");
-        Unit unit7 = new ServerUnit(game, unit4, player, unitType);
+        //Unit unit7 = new ServerUnit(game, unit4, player, unitType);
 
         Tile colonyTile = null;
         for (Tile tempTile : map.getCircleTiles(startTile, true, 
@@ -997,19 +1076,19 @@ public class SimpleMapGenerator implements MapGenerator {
         }
 
         unitType = spec.getUnitType("model.unit.masterCarpenter");
-        Unit carpenter = new ServerUnit(game, colony, player, unitType);
+        //Unit carpenter = new ServerUnit(game, colony, player, unitType);
 
         unitType = spec.getUnitType("model.unit.seasonedScout");
         Unit scout = new ServerUnit(game, colonyTile, player, unitType);
         ((ServerPlayer)player).exploreForUnit(scout);
 
         unitType = spec.getUnitType("model.unit.veteranSoldier");
-        Unit unit8 = new ServerUnit(game, colonyTile, player, unitType);
-        Unit unit9 = new ServerUnit(game, colonyTile, player, unitType);
+        //Unit unit8 = new ServerUnit(game, colonyTile, player, unitType);
+        //Unit unit9 = new ServerUnit(game, colonyTile, player, unitType);
         unitType = spec.getUnitType("model.unit.artillery");
-        Unit unit10 = new ServerUnit(game, colonyTile, player, unitType);
-        Unit unit11 = new ServerUnit(game, colonyTile, player, unitType);
-        Unit unit12 = new ServerUnit(game, colonyTile, player, unitType);
+        //Unit unit10 = new ServerUnit(game, colonyTile, player, unitType);
+        //Unit unit11 = new ServerUnit(game, colonyTile, player, unitType);
+        //Unit unit12 = new ServerUnit(game, colonyTile, player, unitType);
         unitType = spec.getUnitType("model.unit.treasureTrain");
         Unit unit13 = new ServerUnit(game, colonyTile, player, unitType);
         unit13.setTreasureAmount(10000);
@@ -1019,12 +1098,19 @@ public class SimpleMapGenerator implements MapGenerator {
         Goods cigards = new Goods(game, unit14, cigarsType, 5);
         unit14.add(cigards);
         unitType = spec.getUnitType("model.unit.jesuitMissionary");
-        Unit unit15 = new ServerUnit(game, colonyTile, player, unitType);
-        Unit unit16 = new ServerUnit(game, colonyTile, player, unitType);
+        //Unit unit15 = new ServerUnit(game, colonyTile, player, unitType);
+        //Unit unit16 = new ServerUnit(game, colonyTile, player, unitType);
 
         ((ServerPlayer)player).exploreForSettlement(colony);
     }
 
+    /**
+     * Generate starting positions.
+     *
+     * @param map the map
+     * @param players the players
+     * @return the list
+     */
     private List<Position> generateStartingPositions(Map map,
                                                      List<Player> players) {
         int number = players.size();
